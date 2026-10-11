@@ -3,6 +3,10 @@
     function normalize(raw) {
         let value = String(raw || '').trim().replace(/&amp;/g, '&');
         if (!value) throw new Error('empty');
+        const markdown = value.match(/^\[[\s\S]*?\]\((https?:\/\/[\s\S]+)\)$/i);
+        if (markdown) value = markdown[1];
+        if (value.startsWith('<') && value.endsWith('>')) value = value.slice(1, -1);
+        value = value.replace(/^["']|["']$/g, '').trim();
         if (/^data:image\//i.test(value)) return value;
         if (value.startsWith('//')) value = 'https:' + value;
         else if (!/^[a-z][a-z0-9+.-]*:/i.test(value)) value = 'https://' + value;
@@ -16,7 +20,6 @@
             url = new URL(image);
         }
         if (/(^|\.)google\.[a-z.]+$/i.test(url.hostname) && /\/(search|imgres)/.test(url.pathname)) throw new Error('notimage');
-        if (/(^|\.)(pinterest\.[a-z.]+|pin\.it)$/i.test(url.hostname)) throw new Error('notimage');
         if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('invalid');
         return url.href;
     }
@@ -104,16 +107,90 @@
         });
         return result;
     }
-    async function fromURL(raw) {
-        const url = normalize(raw);
-        try { return await prepare(await request(url)); } catch (error) {
+    function pageImages(html, base) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const images = [];
+        const add = value => {
+            if (!value) return;
+            try {
+                const url = new URL(value, base);
+                if (['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !images.includes(url.href)) images.push(url.href);
+            } catch { /* Ignore malformed metadata, keeping the other candidates. */ }
+        };
+        doc.querySelectorAll('meta[property="og:image:secure_url"],meta[property="og:image"],meta[name="twitter:image"],meta[property="twitter:image"],link[rel="image_src"]').forEach(el => add(el.content || el.getAttribute('href')));
+        const schemaImages = value => {
+            if (!value || typeof value !== 'object') return;
+            if (Array.isArray(value)) return value.forEach(schemaImages);
+            if (typeof value.image === 'string') add(value.image);
+            if (Array.isArray(value.image)) value.image.forEach(image => add(typeof image === 'string' ? image : image?.url || image?.contentUrl));
+            if (value.image && typeof value.image === 'object') add(value.image.url || value.image.contentUrl);
+            if (value['@type'] === 'ImageObject') add(value.contentUrl || value.url);
+            if (value['@graph']) schemaImages(value['@graph']);
+        };
+        doc.querySelectorAll('script[type="application/ld+json"]').forEach(el => { try { schemaImages(JSON.parse(el.textContent)); } catch {} });
+        // Prefer the page's own declared image to logos and small interface icons.
+        if (!images.length) doc.querySelectorAll('main img,article img,body img').forEach(el => {
+            if (/logo|avatar|icon|pixel|tracking/i.test(el.getAttribute('src') || '')) return;
+            if (el.hasAttribute('width') && Number(el.getAttribute('width')) < 120) return;
+            add(el.getAttribute('data-src') || el.getAttribute('src'));
+        });
+        return images.slice(0, 4);
+    }
+    async function loadImage(url, originalBlob) {
+        try { return await prepare(originalBlob || await request(url, 10000)); } catch (error) {
             if (url.startsWith('data:')) throw error;
         }
         // The image proxy supplies readable bytes for servers without CORS headers.
         const proxy = new URL('https://wsrv.nl/');
         proxy.searchParams.set('url', url); proxy.searchParams.set('output', 'png'); proxy.searchParams.set('w', '4096'); proxy.searchParams.set('h', '4096'); proxy.searchParams.set('fit', 'inside'); proxy.searchParams.set('we', '');
-        try { return await prepare(await request(proxy.href, 25000)); }
+        try { return await prepare(await request(proxy.href, 15000)); }
         catch { throw new Error('blocked'); }
     }
-    window.KSImageSource = {normalize, sniff, prepare, fromURL};
+    async function pageOrImage(blob, url) {
+        const html = blob.type.includes('text/html') || /^\s*(?:<!doctype|<html|<head|<body)/i.test(await blob.slice(0, 200).text());
+        if (!html) return loadImage(url, blob);
+        const images = pageImages(await blob.text(), url);
+        for (const image of images) {
+            try { return await loadImage(image); } catch {}
+        }
+        throw new Error(images.length ? 'blocked' : 'noimage');
+    }
+    async function metadataImage(url) {
+        const endpoint = new URL('https://api.microlink.io/');
+        endpoint.searchParams.set('url', url);
+        const blob = await request(endpoint.href, 20000);
+        const metadata = JSON.parse(await blob.text());
+        const image = metadata.status === 'success' && metadata.data?.image?.url;
+        if (!image) throw new Error('noimage');
+        return loadImage(normalize(image));
+    }
+    const cache = new Map();
+    async function fromURL(raw) {
+        const url = normalize(raw);
+        if (cache.has(url)) return cache.get(url);
+        let result;
+        let lastError;
+        try { result = await pageOrImage(await request(url, 10000), url); } catch (error) { lastError = error; }
+        const pageLink = /(^|\.)(pinterest\.[a-z.]+|pin\.it)$/i.test(new URL(url).hostname);
+        if (!result && pageLink) {
+            try { result = await metadataImage(url); } catch (error) { lastError = error; }
+        }
+        if (!result && !pageLink && !url.startsWith('data:')) {
+            try { result = await loadImage(url); } catch (error) { lastError = error; }
+        }
+        if (!result && !url.startsWith('data:')) {
+            // Resolve redirects and page metadata, or fetch the original image bytes.
+            const mirror = new URL('https://api.allorigins.win/raw');
+            mirror.searchParams.set('url', url);
+            try { result = await pageOrImage(await request(mirror.href, 15000), url); } catch (error) { lastError = error; }
+        }
+        if (!result && !pageLink && !url.startsWith('data:')) {
+            try { result = await metadataImage(url); } catch (error) { lastError = error; }
+        }
+        if (!result) throw lastError || new Error('blocked');
+        cache.set(url, result);
+        if (cache.size > 4) cache.delete(cache.keys().next().value);
+        return result;
+    }
+    window.KSImageSource = {normalize, sniff, prepare, fromURL, pageImages};
 })();

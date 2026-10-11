@@ -68,7 +68,7 @@
                         <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp,.ico,.tif,.tiff,.heic,.heif" style="display:none;">
                         <div class="bg-url-row" id="bg-url-row">
                             <label for="bg-url-input">Enlace de la imagen</label>
-                            <input type="text" id="bg-url-input" placeholder="Pega la dirección de la imagen" autocomplete="off" spellcheck="false">
+                            <input type="text" id="bg-url-input" placeholder="Pega un enlace o una imagen copiada" autocomplete="off" spellcheck="false">
                             <button type="button" class="btn btn-primary" id="bg-url-apply">Aplicar imagen</button>
                         </div>
                         <div class="bg-url-msg" id="bg-url-msg" role="status"></div>
@@ -180,8 +180,8 @@
 
 </div>
 <script src="./js/export-utils.js"></script>
-<script src="./js/image-source.js"></script>
-<script src="./js/image-controls.js" defer></script>
+<script src="./js/image-source.js?v=20261011-2"></script>
+<script src="./js/image-controls.js?v=20261011-2" defer></script>
 <script src="./js/reading-habits.js"></script>
 <script>// --- TEMA ---
     const btnTheme = document.getElementById('btn-theme');
@@ -314,7 +314,8 @@
 
     const BG_ERRORS = {
         invalid: 'Introduce una dirección de imagen que empiece por https://.',
-        blocked: 'No se pudo importar este enlace. Si es una página de Pinterest o Google, copia la dirección de la imagen; si sigue fallando, descarga la imagen y usa Subir imagen.',
+        blocked: 'La web de origen bloquea la importación o no responde. Prueba a copiar la dirección de la imagen, pegar la imagen copiada o subirla desde tu dispositivo.',
+        noimage: 'Este enlace no contiene una imagen pública que se pueda importar. Si es una búsqueda, abre primero la imagen que quieres usar.',
         decoder: 'No se pudo cargar el conversor de imágenes. Revisa tu conexión y vuelve a intentarlo.',
         size: 'Esta imagen es demasiado grande. Usa una versión más pequeña.',
         empty: 'Pega primero el enlace de la imagen.',

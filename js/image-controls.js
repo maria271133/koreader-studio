@@ -27,6 +27,21 @@
     panel.addEventListener('input', update);
     posX.addEventListener('input', update);
     posY.addEventListener('input', update);
+    document.getElementById('bg-url-input').addEventListener('paste', async event => {
+        const file = Array.from(event.clipboardData?.files || []).find(item => item.type.startsWith('image/'));
+        if (!file) return;
+        event.preventDefault();
+        const button = document.getElementById('bg-url-apply');
+        const label = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Cargando…';
+        try {
+            window.applyCustomImage(await window.KSImageSource.prepare(file));
+            window.setBgMsg('');
+            document.getElementById('bg-url-row').style.display = 'none';
+        } catch { window.setBgMsg('No se pudo pegar esta imagen. Prueba a guardarla y subirla desde tu dispositivo.', true); }
+        finally { button.disabled = false; button.textContent = label; }
+    });
     document.getElementById('btn-change-file').addEventListener('click', () => {
         tint.value = 38;
         panel.value = 82;
