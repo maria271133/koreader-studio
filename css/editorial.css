@@ -21,7 +21,7 @@ body{-webkit-font-smoothing:antialiased}
 .book-header{
  position:relative;isolation:isolate;margin:0 0 36px;padding:40px 34px 42px;text-align:center;
  border:1px solid var(--line-strong);border-radius:24px;
- background:var(--panel-color,var(--inner-surface));box-shadow:var(--shadow-sm);
+ background:var(--panel-color,var(--section-surface));box-shadow:var(--shadow-md);
 }
 .book-header::before{content:"MI BIBLIOTECA";display:block;margin-bottom:18px;font:600 .66rem/1.5 var(--font-sans);letter-spacing:.18em;color:var(--panel-muted,var(--section-ink))}
 #export-node .book-title,#book-view .book-title{

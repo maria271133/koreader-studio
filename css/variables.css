@@ -22,7 +22,7 @@
   --panel-solid:#e1e5de;
   --section-surface:linear-gradient(135deg,#dce5d5,#e0e7d9);
   --inner-surface:linear-gradient(135deg,#eaf0e5,#e8eee1);
-  --brief-surface:linear-gradient(180deg,#cbd6c6,#d5dece);
+  --brief-surface:var(--section-surface);
   --shadow-inset:inset 0 2px 5px rgba(16,56,50,.14),inset 0 1px 0 rgba(16,56,50,.08);
   --calendar-surface:var(--section-surface);
   --panel-surface:var(--section-surface);
@@ -52,21 +52,21 @@
 }
 [data-theme="dark"]{
   --landscape-image:url('../assets/paisaje-castillo-noche.png');
-  --page-1:#050506;
-  --page-2:#09090b;
-  --page-3:#101014;
-  --panel:rgba(19,19,23,.96);
-  --panel-soft:#17171c;
-  --panel-strong:#111114;
-  --panel-solid:#202026;
-  --section-surface:linear-gradient(155deg,#222228,#1a1a20);
-  --inner-surface:linear-gradient(145deg,#36363e,#292930);
-  --brief-surface:linear-gradient(180deg,#141418,#19191e);
+  --page-1:#000000;
+  --page-2:#000000;
+  --page-3:#000000;
+  --workspace-surface:#080808;
+  --section-surface:#121212;
+  --inner-surface:#202020;
+  --panel:var(--workspace-surface);
+  --panel-soft:var(--workspace-surface);
+  --panel-strong:var(--workspace-surface);
+  --panel-solid:var(--section-surface);
+  --brief-surface:var(--section-surface);
   --shadow-inset:inset 0 3px 8px rgba(0,0,0,.48),inset 0 1px 0 rgba(0,0,0,.6);
   --calendar-surface:var(--section-surface);
   --panel-surface:var(--section-surface);
-  --header-surface:linear-gradient(180deg,rgba(31,31,37,.96),rgba(20,20,25,.94));
-  --workspace-surface:linear-gradient(155deg,#121215,#0e0e11);
+  --header-surface:var(--workspace-surface);
   --card-surface:var(--inner-surface);
   --text-main:#f5f3ef;
   --text-soft:#c7c5cb;
@@ -80,8 +80,8 @@
   --shadow-lg:inset 0 1px 0 rgba(255,255,255,.05),0 8px 16px rgba(0,0,0,.45),0 32px 64px -12px rgba(0,0,0,.72);
   --shadow-md:inset 0 1px 0 rgba(255,255,255,.07),0 4px 8px rgba(0,0,0,.35),0 16px 30px -8px rgba(0,0,0,.60);
   --shadow-sm:inset 0 1px 0 rgba(255,255,255,.15),0 2px 4px rgba(0,0,0,.48),0 10px 18px -5px rgba(0,0,0,.65);
-  --bg-card:#111114;
-  --bg-card-rgb:17,17,20;
+  --bg-card:#080808;
+  --bg-card-rgb:8,8,8;
   --heat-empty:rgba(255,255,255,.07);
   --heat-1:var(--beige);
   --heat-2:var(--rosy);
