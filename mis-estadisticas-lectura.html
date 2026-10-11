@@ -59,16 +59,16 @@
                 <div class="bg-picker capture-settings" id="bg-picker">
                     <section class="settings-section">
                         <h3>Imagen de fondo</h3>
-                        <p class="settings-help">Elige una imagen para tu captura.</p>
+                        <p class="settings-help">PNG, JPG, WebP, AVIF, GIF, SVG, BMP, ICO, TIFF y HEIC/HEIF.</p>
                         <div class="image-source-actions">
                             <button class="bg-swatch source-button active" data-swatch="none" type="button" title="Sin fondo">Sin imagen</button>
                             <button class="bg-swatch bg-swatch-custom source-button" id="custom-bg-trigger" type="button" title="Subir tu propia imagen">Subir imagen</button>
                             <button class="bg-swatch bg-swatch-custom source-button" id="custom-bg-url-trigger" type="button" title="Usar una imagen desde un enlace">Usar enlace</button>
                         </div>
-                        <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp" style="display:none;">
+                        <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp,.ico,.tif,.tiff,.heic,.heif" style="display:none;">
                         <div class="bg-url-row" id="bg-url-row">
                             <label for="bg-url-input">Enlace de la imagen</label>
-                            <input type="text" id="bg-url-input" placeholder="https://…" autocomplete="off" spellcheck="false">
+                            <input type="text" id="bg-url-input" placeholder="Pega la dirección de la imagen" autocomplete="off" spellcheck="false">
                             <button type="button" class="btn btn-primary" id="bg-url-apply">Aplicar imagen</button>
                         </div>
                         <div class="bg-url-msg" id="bg-url-msg" role="status"></div>
@@ -180,6 +180,7 @@
 
 </div>
 <script src="./js/export-utils.js"></script>
+<script src="./js/image-source.js"></script>
 <script src="./js/image-controls.js" defer></script>
 <script src="./js/reading-habits.js"></script>
 <script>// --- TEMA ---
@@ -301,7 +302,7 @@
     // IMAGEN DE FONDO: desde un archivo o desde un enlace
     // Todo se convierte a una imagen incrustada antes de usarla, así la captura no
     // depende de internet ni de que la web original siga permitiéndolo.
-    // Formatos: PNG, JPG, WebP, GIF, SVG, AVIF y BMP (HEIC no lo abre ningún navegador).
+    // Formatos nativos y conversión local de TIFF y HEIC/HEIF.
     // El tipo real se detecta por el contenido, no por la extensión, porque algunos
     // sistemas no reconocen bien .webp o .avif y la imagen se quedaría en blanco.
     // ==========================================================================
@@ -312,12 +313,16 @@
     const bgMsg = document.getElementById('bg-url-msg');
 
     const BG_ERRORS = {
+        invalid: 'Introduce una dirección de imagen que empiece por https://.',
+        blocked: 'No se pudo importar este enlace. Si es una página de Pinterest o Google, copia la dirección de la imagen; si sigue fallando, descarga la imagen y usa Subir imagen.',
+        decoder: 'No se pudo cargar el conversor de imágenes. Revisa tu conexión y vuelve a intentarlo.',
+        size: 'Esta imagen es demasiado grande. Usa una versión más pequeña.',
         empty: 'Pega primero el enlace de la imagen.',
         fetch: 'No se pudo descargar la imagen. Es probable que esa web no permita usar sus imágenes en otras páginas. Descárgala y súbela con 🖼️.',
         http: 'Ese enlace no responde o la imagen ya no existe. Revisa que esté bien copiado.',
         notimage: 'Ese enlace no es una imagen directa. Haz clic derecho sobre la imagen y elige «Copiar dirección de la imagen» (no la dirección de la página).',
-        heic: 'El formato HEIC/HEIF no lo abren los navegadores. Conviértela a JPG o PNG.',
-        decode: 'El navegador no puede leer esta imagen. Formatos válidos: PNG, JPG, WebP, GIF, SVG, AVIF y BMP.'
+        heic: 'No se pudo convertir este archivo HEIC/HEIF. Prueba a guardarlo como JPG o PNG.',
+        decode: 'El navegador no puede leer esta imagen. Prueba con PNG, JPG, WebP, GIF, SVG, AVIF, BMP, ICO, TIFF o HEIC/HEIF.'
     };
 
     function setBgMsg(text, isError) {
@@ -331,68 +336,7 @@
         setBgMsg('');
     }
 
-    function readBlob(blob, mode) {
-        return new Promise((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result);
-            r.onerror = () => reject(new Error('decode'));
-            if (mode === 'buffer') r.readAsArrayBuffer(blob); else r.readAsDataURL(blob);
-        });
-    }
-
-    async function sniffImageType(blob) {
-        const buf = new Uint8Array(await readBlob(blob.slice(0, 1024), 'buffer'));
-        const asc = (a, b) => String.fromCharCode.apply(null, Array.from(buf.slice(a, b)));
-        if (buf[0] === 0x89 && asc(1, 4) === 'PNG') return 'image/png';
-        if (buf[0] === 0xFF && buf[1] === 0xD8) return 'image/jpeg';
-        if (asc(0, 4) === 'GIF8') return 'image/gif';
-        if (asc(0, 4) === 'RIFF' && asc(8, 12) === 'WEBP') return 'image/webp';
-        if (asc(0, 2) === 'BM') return 'image/bmp';
-        if (asc(4, 8) === 'ftyp') {
-            const brand = asc(8, 12);
-            if (brand === 'avif' || brand === 'avis') return 'image/avif';
-            if (/^(heic|heix|hevc|hevx|mif1|msf1)/.test(brand)) return 'image/heic';
-        }
-        if (asc(0, buf.length).toLowerCase().indexOf('<svg') !== -1) return 'image/svg+xml';
-        return null;
-    }
-
-    async function prepareBgImage(blob) {
-        const sniffed = await sniffImageType(blob);
-        const type = sniffed || (blob.type && blob.type.indexOf('image/') === 0 ? blob.type : null);
-        if (!type) throw new Error('notimage');
-        if (/heic|heif/.test(type)) throw new Error('heic');
-        const dataUrl = await readBlob(new Blob([blob], { type }), 'url');
-        // Comprobamos que el navegador realmente sabe pintarla antes de usarla
-        await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => reject(new Error('decode'));
-            img.src = dataUrl;
-        });
-        return dataUrl;
-    }
-
-    async function fetchBgImage(rawUrl) {
-        let url = (rawUrl || '').trim();
-        if (!url) throw new Error('empty');
-        if (!/^data:image\//i.test(url)) {
-            if (url.indexOf('//') === 0) url = 'https:' + url;
-            else if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-        }
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 20000);
-        let res;
-        try {
-            res = await fetch(url, { mode: 'cors', signal: ctrl.signal, referrerPolicy: 'no-referrer' });
-        } catch (e) {
-            throw new Error('fetch');
-        } finally {
-            clearTimeout(timer);
-        }
-        if (!res.ok) throw new Error('http');
-        return res.blob();
-    }
+    async function prepareBgImage(blob) { return KSImageSource.prepare(blob); }
 
     function applyCustomImage(dataUrl) {
         exportNodeEl.style.setProperty('--custom-img', `url("${dataUrl}")`);
@@ -426,8 +370,7 @@
         bgUrlApply.textContent = 'Cargando...';
         setBgMsg('');
         try {
-            const blob = await fetchBgImage(bgUrlInput.value);
-            applyCustomImage(await prepareBgImage(blob));
+            applyCustomImage(await KSImageSource.fromURL(bgUrlInput.value));
             bgUrlRow.style.display = 'none';
         } catch (err) {
             setBgMsg(BG_ERRORS[err.message] || BG_ERRORS.decode, true);
