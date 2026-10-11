@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOReader Studio · Estadísticas de lectura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+<link rel="stylesheet" href="./css/global.css">
+<link rel="stylesheet" href="./css/estadisticas.css">
+<link rel="stylesheet" href="./css/componentes.css">
+<link rel="stylesheet" href="./css/variables.css">
+<link rel="stylesheet" href="./css/profundidad.css">
+<link rel="stylesheet" href="./css/editorial.css">
+<script src="./js/theme.js"></script>
+<script src="./js/background-lights.js" defer></script>
+</head>
+<body>
+<div class="workspace">
+  <header class="header-bar">
+    <a class="brand" href="./index.html" aria-label="Volver al inicio"><span class="brand-badge">✦</span><span>KOReader Studio.</span></a>
+    <div class="header-actions">
+      <a href="./index.html" class="btn btn-secondary" id="btn-home">🏠 Inicio</a>
+      <button id="btn-theme" class="btn" type="button">🌙 Tema</button>
+    </div>
+  </header>
+<section class="magic-banner"><div class="magic-banner-grid"><div class="magic-banner-copy"><div class="eyebrow">Estadísticas de lectura</div><h1>Tu lectura,<br>más mágica.</h1><p>Tu lectura, día a día.</p></div><div class="magic-banner-scene" aria-hidden="true"></div></div></section>
+
+
+  
+<label class="upload-zone" id="upload-zone">
+    <div class="upload-icon">📊</div>
+    <div class="upload-text">Arrastra tu archivo statistics.sqlite3</div>
+    <input type="file" id="fileInput" accept=".sqlite3,.sqlite,.db">
+    <div class="file-indicator" id="file-indicator"></div>
+</label>
+
+<div class="nav-bar" id="nav-bar">
+    <div class="nav-left">
+        <button id="btn-global" class="btn active-view">📈 Resumen</button>
+        <button id="btn-annual" class="btn">📅 Anual</button>
+        <div class="custom-select" id="book-select-wrap">
+            <button type="button" class="custom-select-trigger" id="book-select-trigger">
+                <span id="book-select-label">Explora uno de tus libros...</span>
+                <span class="custom-select-arrow">▾</span>
+            </button>
+            <div class="custom-select-panel" id="book-select-panel"></div>
+        </div>
+    </div>
+    <div class="nav-right">
+        <details class="toolbar-group" id="studio-settings">
+            <summary class="toolbar-summary">🎨 Personalizar captura</summary>
+            <div class="toolbar-panel">
+                <div class="bg-picker" id="bg-picker">
+                    <span class="bg-picker-label">Fondo</span>
+                    <button class="bg-swatch active" data-swatch="none" title="Sin fondo"></button>
+                    <button class="bg-swatch bg-swatch-custom" id="custom-bg-trigger" type="button" title="Subir tu propia imagen">🖼️</button>
+                    <button class="bg-swatch bg-swatch-custom" id="custom-bg-url-trigger" type="button" title="Usar una imagen desde un enlace">🔗</button>
+                    <input type="color" id="custom-bg-color" value="#7D73FF" title="Color del tinte" style="display:none;">
+                    <input type="range" id="custom-bg-opacity" min="0" max="80" value="38" title="Intensidad del tinte" style="display:none;">
+                    <input type="range" id="custom-bg-pos-x" min="0" max="100" value="50" title="Mover imagen horizontalmente" style="display:none;">
+                    <input type="range" id="custom-bg-pos-y" min="0" max="100" value="50" title="Mover imagen verticalmente" style="display:none;">
+                    <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp" style="display:none;">
+                    <span class="bg-picker-label">Panel</span>
+                    <input type="color" id="panel-color" value="#FFFFFF" title="Color del panel donde va el texto">
+                    <button type="button" class="panel-reset-btn" id="panel-color-reset" title="Volver al color original del panel">↺</button>
+                    <div class="bg-url-row" id="bg-url-row">
+                        <input type="text" id="bg-url-input" placeholder="Pega aquí el enlace de la imagen (https://...)" autocomplete="off" spellcheck="false">
+                        <button type="button" class="btn btn-primary" id="bg-url-apply">Usar</button>
+                    </div>
+                    <div class="bg-url-msg" id="bg-url-msg"></div>
+                </div>
+            </div>
+        </details>
+        <button id="btn-export" class="btn btn-primary">📸 Capturar</button>
+        <button id="btn-change-file" class="btn">🔄 Cambiar archivo</button>
+    </div>
+</div>
+
+<div id="export-node" data-bg="none">
+    <div class="export-scene"></div>
+    <div class="export-panel">
+        <div id="view-global">
+            <div class="habits-heading"><div><h2>Mi vida entre páginas</h2><p id="habits-period"></p></div><span class="habits-tag">Mi hábito de lectura</span></div>
+            <div class="stats-grid">
+                <div class="stat-card sc-1"><div class="stat-val" id="g-hours">0</div><div class="stat-lbl">Tiempo entre páginas</div></div>
+                <div class="stat-card sc-2"><div class="stat-val" id="g-pages">0</div><div class="stat-lbl">Días con lectura</div></div>
+                <div class="stat-card sc-3"><div class="stat-val" id="g-average">0</div><div class="stat-lbl">Media por día con lectura</div></div>
+                <div class="stat-card sc-4"><div class="stat-val" id="g-streak">0</div><div class="stat-lbl">Mejor racha del archivo</div></div>
+            </div>
+            <div class="habits-layout"><section class="habit-panel"><h2>Así han sido mis días</h2><p class="habit-caption" id="daily-caption"></p><div id="habit-daily"></div><p id="habit-day-detail" class="habit-day-detail" aria-live="polite">Elige una barra para ver tus lecturas de ese día.</p></section><section class="habit-panel"><h2>Mis horas para leer</h2><p class="habit-caption">Tiempo dedicado según la hora de inicio de cada registro.</p><div id="habit-hours"></div></section></div>
+            <section class="habit-library"><div class="habits-heading"><h2>Mis lecturas</h2><span id="g-books" class="habits-tag"></span></div><div id="habit-books" class="habit-book-grid"></div><details class="habit-brief"><summary>Aperturas breves y libros sin actividad</summary><div id="habit-brief-books" class="habit-book-grid"></div></details></section>
+            <details class="habit-brief"><summary>Calendario de páginas registradas</summary>
+            <div class="heatmap-box">
+                <div class="heatmap-header">
+                    <div class="heatmap-title">Frecuencia de lectura · últimos 90 días</div>
+                    <div class="heat-legend">Menos <div class="lvl-0 heat-cell"></div><div class="lvl-1 heat-cell"></div><div class="lvl-2 heat-cell"></div><div class="lvl-3 heat-cell"></div><div class="lvl-4 heat-cell"></div><div class="lvl-5 heat-cell"></div> Más</div>
+                </div>
+                <div class="heatmap-grid" id="heatmap-grid"></div>
+            </div>
+            </details>
+        </div>
+
+        <div id="view-book" style="display:none;">
+            <div class="book-header">
+                <div class="book-title" id="b-title">Título del libro</div>
+                <div class="book-author" id="b-author">Autor</div>
+                <div class="badge" id="b-badge" style="display:none;">Completado</div>
+            </div>
+            <div class="audit-list">
+                <div class="audit-row"><span class="audit-label-group"><span class="audit-lbl">Página más avanzada</span><small class="audit-help">Hasta dónde llegaste; no es la cantidad de páginas leídas.</small></span><span class="audit-val" id="b-progress">0 / 0 (0%)</span></div>
+                <div class="audit-row"><span class="audit-label-group"><span class="audit-lbl">Páginas leídas sin repetir</span><small class="audit-help">Cada página cuenta una vez, en registros de menos de una hora.</small></span><span class="audit-val" id="b-unique">0</span></div>
+                <div class="audit-row"><span class="audit-label-group"><span class="audit-lbl">Tiempo de lectura filtrado</span><small class="audit-help">Suma los registros de duración positiva y menor de una hora.</small></span><span class="audit-val" id="b-time">0 minutos</span></div>
+                <div class="audit-row"><span class="audit-label-group"><span class="audit-lbl">Tiempo total registrado</span><small class="audit-help">Todo el tiempo guardado por KOReader, incluidos los registros largos.</small></span><span class="audit-val" id="b-raw-time">0 minutos</span></div>
+                <div class="audit-row"><span class="audit-lbl">Días con lectura</span><span class="audit-val" id="b-days">0</span></div>
+                <div class="audit-row"><span class="audit-lbl">Tiempo medio por día de lectura</span><span class="audit-val" id="b-avg-daily">0 minutos</span></div>
+                <div class="audit-row"><span class="audit-lbl">Tiempo medio por registro de página</span><span class="audit-val" id="b-speed">0 segundos</span></div>
+                <div class="audit-row"><span class="audit-lbl">Fechas de lectura</span><span class="audit-val" id="b-dates">-</span></div>
+                <div class="audit-row"><span class="audit-lbl">Hora de lectura preferida</span><span class="audit-val" id="b-fav-hour">--:--</span></div>
+            </div>
+            <div id="calendar-wrapper" class="cal-wrapper"></div>
+        </div>
+
+        <div id="view-annual" style="display:none;">
+            <div class="heatmap-box">
+                <div class="heatmap-header">
+                    <div class="heatmap-title">Mosaico de lectura · últimos 365 días</div>
+                    <div class="heat-legend">Menos <div class="lvl-0 heat-cell annual-cell"></div><div class="lvl-1 heat-cell annual-cell"></div><div class="lvl-2 heat-cell annual-cell"></div><div class="lvl-3 heat-cell annual-cell"></div><div class="lvl-4 heat-cell annual-cell"></div><div class="lvl-5 heat-cell annual-cell"></div> Más</div>
+                </div>
+                <div class="annual-scroll">
+                    <div class="annual-months" id="annual-months"></div>
+                    <div class="annual-grid" id="annual-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+<script src="./js/export-utils.js"></script>
+<script src="./js/reading-habits.js"></script>
+<script>// --- TEMA ---
+    const btnTheme = document.getElementById('btn-theme');
+   // --- FLUJO ---
+    const vGlobal = document.getElementById('view-global');
+    const vBook = document.getElementById('view-book');
+    const vAnnual = document.getElementById('view-annual');
+
+    // --- DESPLEGABLE DE LIBROS PROPIO ---
+    const selectWrap = document.getElementById('book-select-wrap');
+    const selectTrigger = document.getElementById('book-select-trigger');
+    const selectLabel = document.getElementById('book-select-label');
+    const selectPanel = document.getElementById('book-select-panel');
+    const DEFAULT_SELECT_LABEL = 'Explora uno de tus libros...';
+    let bSelectValue = '';
+
+    function closeBookSelect() { selectWrap.classList.remove('open'); }
+    selectTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectWrap.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!selectWrap.contains(e.target)) closeBookSelect();
+    });
+
+    function clearBookSelectValue() {
+        bSelectValue = '';
+        selectLabel.textContent = DEFAULT_SELECT_LABEL;
+        document.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+        closeBookSelect();
+    }
+    
+    document.getElementById('btn-global').addEventListener('click', () => {
+        clearBookSelectValue();
+        vGlobal.style.display = 'block';
+        vBook.style.display = 'none';
+        vAnnual.style.display = 'none';
+    });
+
+    document.getElementById('btn-annual').addEventListener('click', () => {
+        clearBookSelectValue();
+        vGlobal.style.display = 'none';
+        vBook.style.display = 'none';
+        vAnnual.style.display = 'block';
+        renderAnnual();
+    });
+
+    // --- BASE DE DATOS SQLITE ---
+    let db = null;
+    let sqlReady;
+    function loadSQL() {
+        if (!sqlReady) {
+            sqlReady = Promise.resolve().then(() => {
+                if (typeof initSqlJs !== 'function') throw new Error('No se ha cargado SQL.js. Comprueba la conexión y recarga la página.');
+                return initSqlJs({ locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}` });
+            }).catch(error => { sqlReady = null; throw error; });
+        }
+        return sqlReady;
+    }
+    const fileInputEl = document.getElementById('fileInput');
+    fileInputEl.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        fileInputEl.disabled = true;
+        let candidate;
+        try {
+            const SQL = await loadSQL();
+            candidate = new SQL.Database(new Uint8Array(await file.arrayBuffer()));
+            candidate.exec('SELECT id, title, authors, pages, last_open FROM book LIMIT 1');
+            candidate.exec('SELECT id_book, page, start_time, duration FROM page_stat LIMIT 1');
+            if (db) db.close();
+            db = candidate;
+            candidate = null;
+            renderGlobal();
+            document.getElementById('upload-zone').style.display = 'none';
+            exportNodeEl.style.display = 'block';
+            document.getElementById('nav-bar').style.display = 'flex';
+            vGlobal.style.display = 'block'; vBook.style.display = 'none'; vAnnual.style.display = 'none';
+        } catch (error) {
+            if (candidate) candidate.close();
+            console.error(error);
+            alert('No se pudo importar statistics.sqlite3. ' + error.message);
+            fileInputEl.value = '';
+        } finally { fileInputEl.disabled = false; }
+    });
+
+    // --- SELECTOR DE FONDO PARA LA CAPTURA (vista previa en vivo) ---
+    const exportNodeEl = document.getElementById('export-node');
+    const bgSwatches = document.querySelectorAll('.bg-swatch');
+    document.querySelector('.bg-swatch[data-swatch="none"]').addEventListener('click', () => {
+        exportNodeEl.setAttribute('data-bg', 'none');
+        bgSwatches.forEach(s => s.classList.remove('active'));
+        document.querySelector('.bg-swatch[data-swatch="none"]').classList.add('active');
+    });
+
+    // --- FONDO PERSONALIZADO: imagen propia + tinte de color a elección ---
+    const customTrigger = document.getElementById('custom-bg-trigger');
+    const customFileInput = document.getElementById('custom-bg-file');
+    const customColorInput = document.getElementById('custom-bg-color');
+    const customOpacityInput = document.getElementById('custom-bg-opacity');
+    const customPosXInput = document.getElementById('custom-bg-pos-x');
+    const customPosYInput = document.getElementById('custom-bg-pos-y');
+
+    function hexToRgb(hex) {
+        const m = hex.replace('#', '');
+        const bigint = parseInt(m, 16);
+        return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+    }
+    function applyCustomTint() {
+        const { r, g, b } = hexToRgb(customColorInput.value);
+        const alpha = customOpacityInput.value / 100;
+        exportNodeEl.style.setProperty('--custom-tint', `rgba(${r}, ${g}, ${b}, ${alpha})`);
+    }
+    function applyCustomPos() {
+        exportNodeEl.style.setProperty('--custom-pos', `${customPosXInput.value}% ${customPosYInput.value}%`);
+    }
+    // ==========================================================================
+    // IMAGEN DE FONDO: desde un archivo o desde un enlace
+    // Todo se convierte a una imagen incrustada antes de usarla, así la captura no
+    // depende de internet ni de que la web original siga permitiéndolo.
+    // Formatos: PNG, JPG, WebP, GIF, SVG, AVIF y BMP (HEIC no lo abre ningún navegador).
+    // El tipo real se detecta por el contenido, no por la extensión, porque algunos
+    // sistemas no reconocen bien .webp o .avif y la imagen se quedaría en blanco.
+    // ==========================================================================
+    const bgUrlTrigger = document.getElementById('custom-bg-url-trigger');
+    const bgUrlRow = document.getElementById('bg-url-row');
+    const bgUrlInput = document.getElementById('bg-url-input');
+    const bgUrlApply = document.getElementById('bg-url-apply');
+    const bgMsg = document.getElementById('bg-url-msg');
+
+    const BG_ERRORS = {
+        empty: 'Pega primero el enlace de la imagen.',
+        fetch: 'No se pudo descargar la imagen. Es probable que esa web no permita usar sus imágenes en otras páginas. Descárgala y súbela con 🖼️.',
+        http: 'Ese enlace no responde o la imagen ya no existe. Revisa que esté bien copiado.',
+        notimage: 'Ese enlace no es una imagen directa. Haz clic derecho sobre la imagen y elige «Copiar dirección de la imagen» (no la dirección de la página).',
+        heic: 'El formato HEIC/HEIF no lo abren los navegadores. Conviértela a JPG o PNG.',
+        decode: 'El navegador no puede leer esta imagen. Formatos válidos: PNG, JPG, WebP, GIF, SVG, AVIF y BMP.'
+    };
+
+    function setBgMsg(text, isError) {
+        bgMsg.textContent = text || '';
+        bgMsg.classList.toggle('error', !!isError);
+        bgMsg.style.display = text ? 'block' : 'none';
+    }
+    function resetBgUrlUi() {
+        bgUrlRow.style.display = 'none';
+        bgUrlInput.value = '';
+        setBgMsg('');
+    }
+
+    function readBlob(blob, mode) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result);
+            r.onerror = () => reject(new Error('decode'));
+            if (mode === 'buffer') r.readAsArrayBuffer(blob); else r.readAsDataURL(blob);
+        });
+    }
+
+    async function sniffImageType(blob) {
+        const buf = new Uint8Array(await readBlob(blob.slice(0, 1024), 'buffer'));
+        const asc = (a, b) => String.fromCharCode.apply(null, Array.from(buf.slice(a, b)));
+        if (buf[0] === 0x89 && asc(1, 4) === 'PNG') return 'image/png';
+        if (buf[0] === 0xFF && buf[1] === 0xD8) return 'image/jpeg';
+        if (asc(0, 4) === 'GIF8') return 'image/gif';
+        if (asc(0, 4) === 'RIFF' && asc(8, 12) === 'WEBP') return 'image/webp';
+        if (asc(0, 2) === 'BM') return 'image/bmp';
+        if (asc(4, 8) === 'ftyp') {
+            const brand = asc(8, 12);
+            if (brand === 'avif' || brand === 'avis') return 'image/avif';
+            if (/^(heic|heix|hevc|hevx|mif1|msf1)/.test(brand)) return 'image/heic';
+        }
+        if (asc(0, buf.length).toLowerCase().indexOf('<svg') !== -1) return 'image/svg+xml';
+        return null;
+    }
+
+    async function prepareBgImage(blob) {
+        const sniffed = await sniffImageType(blob);
+        const type = sniffed || (blob.type && blob.type.indexOf('image/') === 0 ? blob.type : null);
+        if (!type) throw new Error('notimage');
+        if (/heic|heif/.test(type)) throw new Error('heic');
+        const dataUrl = await readBlob(new Blob([blob], { type }), 'url');
+        // Comprobamos que el navegador realmente sabe pintarla antes de usarla
+        await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('decode'));
+            img.src = dataUrl;
+        });
+        return dataUrl;
+    }
+
+    async function fetchBgImage(rawUrl) {
+        let url = (rawUrl || '').trim();
+        if (!url) throw new Error('empty');
+        if (!/^data:image\//i.test(url)) {
+            if (url.indexOf('//') === 0) url = 'https:' + url;
+            else if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        }
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 20000);
+        let res;
+        try {
+            res = await fetch(url, { mode: 'cors', signal: ctrl.signal, referrerPolicy: 'no-referrer' });
+        } catch (e) {
+            throw new Error('fetch');
+        } finally {
+            clearTimeout(timer);
+        }
+        if (!res.ok) throw new Error('http');
+        return res.blob();
+    }
+
+    function applyCustomImage(dataUrl) {
+        exportNodeEl.style.setProperty('--custom-img', `url("${dataUrl}")`);
+        applyCustomTint();
+        applyCustomPos();
+        exportNodeEl.setAttribute('data-bg', 'custom');
+        bgSwatches.forEach(s => s.classList.remove('active'));
+        customTrigger.classList.add('active');
+        customColorInput.style.display = 'inline-block';
+        customOpacityInput.style.display = 'inline-block';
+        customPosXInput.style.display = 'inline-block';
+        customPosYInput.style.display = 'inline-block';
+    }
+
+    customTrigger.addEventListener('click', () => customFileInput.click());
+    customFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            applyCustomImage(await prepareBgImage(file));
+            setBgMsg('');
+        } catch (err) {
+            setBgMsg(BG_ERRORS[err.message] || BG_ERRORS.decode, true);
+        }
+        customFileInput.value = '';
+    });
+
+    async function applyBgFromUrl() {
+        const label = bgUrlApply.textContent;
+        bgUrlApply.disabled = true;
+        bgUrlApply.textContent = 'Cargando...';
+        setBgMsg('');
+        try {
+            const blob = await fetchBgImage(bgUrlInput.value);
+            applyCustomImage(await prepareBgImage(blob));
+            bgUrlRow.style.display = 'none';
+        } catch (err) {
+            setBgMsg(BG_ERRORS[err.message] || BG_ERRORS.decode, true);
+        } finally {
+            bgUrlApply.disabled = false;
+            bgUrlApply.textContent = label;
+        }
+    }
+    bgUrlTrigger.addEventListener('click', () => {
+        const open = bgUrlRow.style.display === 'flex';
+        bgUrlRow.style.display = open ? 'none' : 'flex';
+        if (!open) bgUrlInput.focus();
+    });
+    bgUrlApply.addEventListener('click', applyBgFromUrl);
+    bgUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); applyBgFromUrl(); }
+    });
+
+    // ==========================================================================
+    // COLOR DEL PANEL (el fondo donde va el texto)
+    // Sin tocarlo, sigue el tema claro/oscuro. Si eliges un color, se aplica tanto al
+    // panel sin imagen como al panel semitransparente que va sobre una imagen de fondo.
+    // Con colores claros, el texto pasa solo a tono oscuro para que siga leyéndose.
+    // ==========================================================================
+    const panelColorInput = document.getElementById('panel-color');
+    const panelColorReset = document.getElementById('panel-color-reset');
+    const PANEL_OVERRIDES = ['--panel-color','--panel-rgb','--panel-ink','--panel-muted','--panel-heading','--panel-subtitle','--panel-border','--panel-surface','--workspace-surface','--text-main','--text-soft','--text-faint','--line','--line-strong'];
+    let panelColorCustom = false;
+
+    function syncPanelPicker() {
+        if (panelColorCustom) return;
+        const color = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim();
+        if (/^#[0-9a-f]{6}$/i.test(color)) panelColorInput.value = color;
+    }
+    function applyPanelColor() {
+        const hex = panelColorInput.value;
+        const { r, g, b } = hexToRgb(hex);
+        panelColorCustom = true;
+        const luminance = (0.2126*r + 0.7152*g + 0.0722*b)/255;
+        const ink = luminance > .54 ? '#302431' : '#fff8fd';
+        const muted = luminance > .54 ? '#584b59' : '#e5d5e1';
+        const border = luminance > .54 ? 'rgba(49,34,49,.20)' : 'rgba(255,245,255,.24)';
+        exportNodeEl.style.setProperty('--panel-color',hex);
+        exportNodeEl.style.setProperty('--panel-rgb',`${r}, ${g}, ${b}`);
+        exportNodeEl.style.setProperty('--panel-ink',ink);
+        exportNodeEl.style.setProperty('--panel-muted',muted);
+        exportNodeEl.style.setProperty('--panel-heading',luminance > .54 ? '#535334' : '#d3c9a1');
+        exportNodeEl.style.setProperty('--panel-subtitle',luminance > .54 ? '#984a34' : '#ffb69b');
+        exportNodeEl.style.setProperty('--panel-border',border);
+        exportNodeEl.style.setProperty('--panel-surface',hex);
+        exportNodeEl.style.setProperty('--workspace-surface',hex);
+        exportNodeEl.style.setProperty('--text-main',ink);
+        exportNodeEl.style.setProperty('--text-soft',muted);
+        exportNodeEl.style.setProperty('--text-faint',muted);
+        exportNodeEl.style.setProperty('--line',border);
+        exportNodeEl.style.setProperty('--line-strong',border);
+    }
+    function resetPanelColor() {
+        panelColorCustom = false;
+        PANEL_OVERRIDES.forEach(k => exportNodeEl.style.removeProperty(k));
+        syncPanelPicker();
+    }
+    panelColorInput.addEventListener('input', applyPanelColor);
+    panelColorInput.addEventListener('change', applyPanelColor);
+    panelColorReset.addEventListener('click', resetPanelColor);
+    syncPanelPicker();
+    new MutationObserver(syncPanelPicker).observe(document.documentElement, {attributes:true,attributeFilter:['data-theme']});
+
+    // ==========================================================================
+    // BLINDAJE ANTI-SOLAPE PARA LA CAPTURA
+    // Al capturar, el navegador copia la altura de cada texto en píxeles. Si en la copia
+    // una línea se parte distinto que en pantalla (por medio píxel de diferencia en la
+    // fuente), el texto sobra por abajo y pisa al siguiente: título con autor, cita con
+    // nota personal... Para evitarlo, durante la captura fijamos los saltos de línea
+    // exactos que ya ves en pantalla, y los devolvemos a la normalidad al terminar.
+    // ==========================================================================
+    const FREEZE_SELECTOR = '.book-title, .book-author, .note-meta, .note-meta-chapter, .note-text, .dialogue-line, .user-note-body, .user-note-header, .note-chapter, .audit-lbl, .audit-help, .audit-val, .heatmap-title, .cal-month-title';
+    function freezeLineBreaks(root) {
+        const undo = [];
+        try {
+            const range = document.createRange();
+            root.querySelectorAll(FREEZE_SELECTOR).forEach(el => {
+                if (el.childElementCount || el.childNodes.length !== 1 || el.firstChild.nodeType !== 3) return;
+                if (el.getClientRects().length === 0) return;
+
+                const textNode = el.firstChild;
+                const original = textNode.nodeValue;
+                const breaks = [];
+                let lastTop = null;
+
+                const visit = (start, end) => {
+                    range.setStart(textNode, start);
+                    range.setEnd(textNode, end);
+                    const rects = range.getClientRects();
+                    if (!rects.length) return;
+                    // Palabra partida entre dos líneas (p. ej. por un guion): la miramos letra a letra
+                    if (rects.length > 1 && end - start > 1) {
+                        for (let i = start; i < end; i++) visit(i, i + 1);
+                        return;
+                    }
+                    const r = rects[0];
+                    if (lastTop !== null && r.top - lastTop > r.height * 0.5) breaks.push(start);
+                    lastTop = r.top;
+                };
+
+                const re = /\S+/g;
+                let m;
+                while ((m = re.exec(original)) !== null) visit(m.index, m.index + m[0].length);
+
+                const pieces = [];
+                let from = 0;
+                breaks.forEach(b => { pieces.push(original.slice(from, b)); from = b; });
+                pieces.push(original.slice(from));
+                const frozenText = pieces.map(p => p.trim()).join('\n');
+
+                const prevWhiteSpace = el.style.whiteSpace;
+                el.style.whiteSpace = 'pre';
+                textNode.nodeValue = frozenText;
+                undo.push(() => { textNode.nodeValue = original; el.style.whiteSpace = prevWhiteSpace; });
+            });
+        } catch (err) {
+            console.warn('No se pudieron fijar los saltos de línea:', err);
+        }
+        return () => undo.forEach(fn => fn());
+    }
+
+    customColorInput.addEventListener('input', applyCustomTint);
+    customOpacityInput.addEventListener('input', applyCustomTint);
+    customPosXInput.addEventListener('input', applyCustomPos);
+    customPosYInput.addEventListener('input', applyCustomPos);
+
+    // --- CAMBIAR ARCHIVO SIN RECARGAR LA PÁGINA ---
+    document.getElementById('btn-change-file').addEventListener('click', () => {
+        if (db) { db.close(); db = null; }
+        fileInputEl.value = '';
+        document.getElementById('export-node').style.display = 'none';
+        document.getElementById('nav-bar').style.display = 'none';
+        document.getElementById('upload-zone').style.display = 'flex';
+        bSelectValue = '';
+        selectLabel.textContent = DEFAULT_SELECT_LABEL;
+        selectPanel.innerHTML = '';
+        closeBookSelect();
+        exportNodeEl.setAttribute('data-bg', 'none');
+        bgSwatches.forEach(s => s.classList.remove('active'));
+        document.querySelector('.bg-swatch[data-swatch="none"]').classList.add('active');
+        customTrigger.classList.remove('active');
+        customColorInput.style.display = 'none';
+        customOpacityInput.style.display = 'none';
+        customPosXInput.style.display = 'none';
+        customPosYInput.style.display = 'none';
+        customPosXInput.value = 50;
+        customPosYInput.value = 50;
+        customFileInput.value = '';
+        resetBgUrlUi();
+        exportNodeEl.style.removeProperty('--custom-img');
+        exportNodeEl.style.removeProperty('--custom-tint');
+        exportNodeEl.style.removeProperty('--custom-pos');
+        resetPanelColor();
+    });
+
+    // Escala común para los tres calendarios: páginas únicas por día.
+    // Rangos fijos: 1–5, 6–15, 16–35, 36–80 y más de 80.
+    // La misma cantidad recibe siempre el mismo color en cualquier vista.
+    function formatReadingDuration(seconds) {
+        const total = Math.max(0, Math.round(Number(seconds) || 0));
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const remainder = total % 60;
+        const parts = [];
+        if (hours) parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
+        if (minutes) parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
+        if (remainder) parts.push(`${remainder} ${remainder === 1 ? 'segundo' : 'segundos'}`);
+        return parts.join(' ') || '0 segundos';
+    }
+    function formatReadingDate(timestamp) {
+        const date = new Date(timestamp * 1000);
+        const weekdays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return `${weekdays[date.getDay()]} ${day}/${month}/${date.getFullYear()}`;
+    }
+    function localDateKey(date) {
+        return [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-');
+    }
+    function readingLevel(pages) {
+        if (pages <= 0) return 0;
+        if (pages <= 5) return 1;      // beige
+        if (pages <= 15) return 2;     // rosy brown
+        if (pages <= 35) return 3;     // moss green
+        if (pages <= 80) return 4;     // midnight green
+        return 5;                      // emerald green
+    }
+
+    function renderGlobal() {
+        const tSecs = db.exec("SELECT SUM(duration) FROM page_stat WHERE duration > 0 AND duration < 3600")[0]?.values[0][0] || 0;
+        document.getElementById('g-hours').textContent = (tSecs / 3600).toFixed(1);
+        document.getElementById('g-pages').textContent = db.exec("SELECT COUNT(*) FROM page_stat")[0]?.values[0][0] || 0;
+        
+        let finished = 0;
+        const pRes = db.exec("SELECT id_book, MAX(page) FROM page_stat GROUP BY id_book");
+        if (pRes.length > 0) {
+            pRes[0].values.forEach(row => {
+                const tot = db.exec(`SELECT pages FROM book WHERE id = ${row[0]}`)[0]?.values[0][0] || 0;
+                if (tot > 0 && (row[1] / tot) >= 0.95) finished++;
+            });
+        }
+        document.getElementById('g-books').textContent = finished;
+
+        let streak = 0;
+        const dRes = db.exec("SELECT DISTINCT date(start_time, 'unixepoch', 'localtime') FROM page_stat ORDER BY 1 DESC");
+        if (dRes.length > 0) {
+            const dates = dRes[0].values.map(r => { const [y,m,d] = r[0].split('-').map(Number); return Date.UTC(y,m-1,d); });
+            const now = new Date(); const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+            if ((today - dates[0]) / 86400000 >= 0 && (today - dates[0]) / 86400000 <= 1) {
+                streak = 1;
+                for (let i = 0; i < dates.length - 1; i++) {
+                    if (Math.ceil(Math.abs(dates[i] - dates[i+1]) / 86400000) === 1) streak++; else break;
+                }
+            }
+        }
+        document.getElementById('g-streak').textContent = streak;
+
+        const heatmap = document.getElementById('heatmap-grid');
+        heatmap.innerHTML = '';
+        const todayD = new Date();
+        const startDay = new Date(todayD); startDay.setDate(todayD.getDate() - 89); startDay.setHours(0,0,0,0);
+        
+        const heatData = {}; let maxP = 0;
+        const qHeat = db.exec(`SELECT date(start_time, 'unixepoch', 'localtime'), COUNT(DISTINCT id_book || ':' || page) FROM page_stat WHERE start_time >= ${Math.floor(startDay.getTime()/1000)} GROUP BY 1`);
+        if (qHeat.length > 0) {
+            qHeat[0].values.forEach(r => { heatData[r[0]] = r[1]; if(r[1] > maxP) maxP = r[1]; });
+        }
+
+        let iter = new Date(startDay);
+        iter.setDate(iter.getDate() - (iter.getDay() === 0 ? 6 : iter.getDay() - 1));
+
+        while (iter <= todayD || iter.getDay() !== 1) {
+            const dStr = localDateKey(iter);
+            const div = document.createElement('div');
+            div.className = 'heat-cell';
+            
+            if (iter < startDay || iter > todayD) div.style.opacity = '0'; 
+            else {
+                const p = heatData[dStr] || 0;
+                div.classList.add('lvl-' + readingLevel(p));
+            }
+            heatmap.appendChild(div);
+            iter.setDate(iter.getDate() + 1);
+        }
+
+        selectPanel.innerHTML = '';
+        const books = db.exec("SELECT id, title, authors FROM book ORDER BY last_open DESC");
+        if (books.length > 0 && books[0].values.length > 0) {
+            books[0].values.forEach(r => {
+                const opt = document.createElement('button');
+                opt.type = 'button';
+                opt.className = 'custom-select-option';
+                opt.dataset.id = r[0];
+                opt.textContent = r[1] || 'Sin título';
+                opt.addEventListener('click', () => selectBook(r[0], opt.textContent));
+                selectPanel.appendChild(opt);
+            });
+        } else {
+            const empty = document.createElement('div');
+            empty.className = 'custom-select-empty';
+            empty.textContent = 'No se encontraron libros en este archivo';
+            selectPanel.appendChild(empty);
+        }
+        KSHabits.render(db, selectBook, formatReadingDuration);
+    }
+
+    // --- RESUMEN ANUAL: MOSAICO DE LECTURA (últimos 365 días, escalado al pico del año) ---
+    function renderAnnual() {
+        const grid = document.getElementById('annual-grid');
+        const monthsRow = document.getElementById('annual-months');
+        grid.innerHTML = '';
+        monthsRow.innerHTML = '';
+
+        const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
+        const startDay = new Date(todayD); startDay.setDate(todayD.getDate() - 364); // 365 días incluyendo hoy
+
+        // Páginas únicas leídas por día, agrupadas por date(start_time), últimos 365 días
+        const dayData = {};
+        let maxP = 0;
+        const qAnnual = db.exec(`
+            SELECT date(start_time, 'unixepoch', 'localtime') as d, COUNT(DISTINCT id_book || ':' || page) as pages
+            FROM page_stat
+            WHERE start_time >= ${Math.floor(startDay.getTime() / 1000)}
+            GROUP BY d
+        `);
+        if (qAnnual.length > 0) {
+            qAnnual[0].values.forEach(r => {
+                dayData[r[0]] = r[1];
+                if (r[1] > maxP) maxP = r[1];
+            });
+        }
+        // Escala fija compartida por los tres calendarios.
+        const mNamesShort = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+        // Alineamos la cuadrícula: arrancamos en el lunes de la semana que contiene startDay
+        let iter = new Date(startDay);
+        const align = iter.getDay() === 0 ? 6 : iter.getDay() - 1;
+        iter.setDate(iter.getDate() - align);
+
+        let col = 0;
+        let lastMonth = -1;
+
+        while (iter <= todayD || iter.getDay() !== 1) {
+            const dStr = localDateKey(iter);
+            const row = iter.getDay() === 0 ? 6 : iter.getDay() - 1; // 0 = lunes ... 6 = domingo
+
+            // Iniciales del mes arriba de la cuadrícula, en la columna donde ese mes empieza
+            if (row === 0 && iter >= startDay && iter <= todayD) {
+                const m = iter.getMonth();
+                if (m !== lastMonth) {
+                    const lbl = document.createElement('div');
+                    lbl.className = 'annual-month-lbl';
+                    lbl.style.gridColumnStart = col + 1;
+                    lbl.textContent = mNamesShort[m];
+                    monthsRow.appendChild(lbl);
+                    lastMonth = m;
+                }
+            }
+
+            const cell = document.createElement('div');
+            cell.className = 'heat-cell annual-cell';
+            cell.style.gridRow = row + 1;
+            cell.style.gridColumn = col + 1;
+
+            if (iter < startDay || iter > todayD) {
+                cell.style.opacity = '0';
+            } else {
+                cell.title = dStr;
+                const p = dayData[dStr] || 0;
+                cell.classList.add('lvl-' + readingLevel(p));
+            }
+
+            grid.appendChild(cell);
+
+            iter.setDate(iter.getDate() + 1);
+            if (row === 6) col++;
+        }
+    }
+
+    // --- VISTA DE LIBRO ---
+    function selectBook(id, title) {
+        if (!id) return;
+
+        bSelectValue = id;
+        selectLabel.textContent = title || 'Sin título';
+        document.querySelectorAll('.custom-select-option').forEach(o => {
+            o.classList.toggle('selected', o.dataset.id === String(id));
+        });
+        closeBookSelect();
+        
+        vGlobal.style.display = 'none';
+        vBook.style.display = 'block';
+        vAnnual.style.display = 'none';
+
+        const bInfo = db.exec(`SELECT title, authors, pages FROM book WHERE id = ${id}`)[0].values[0];
+        document.getElementById('b-title').textContent = bInfo[0] || 'Desconocido';
+        document.getElementById('b-author').textContent = bInfo[1] || 'Autor anónimo';
+        const totPgs = bInfo[2] || 0;
+
+        ['b-time', 'b-raw-time', 'b-days', 'b-avg-daily', 'b-speed', 'b-unique', 'b-dates', 'b-progress', 'b-fav-hour'].forEach(id => {
+            document.getElementById(id).textContent = '—';
+        });
+        document.getElementById('b-badge').style.display = 'none';
+
+        const stats = db.exec(`SELECT SUM(duration), COUNT(DISTINCT page), MAX(page), MIN(start_time), MAX(start_time), COUNT(DISTINCT date(start_time, 'unixepoch', 'localtime')), COUNT(page) FROM page_stat WHERE id_book = ${id} AND duration > 0 AND duration < 3600`);
+        const rawT = db.exec(`SELECT SUM(duration) FROM page_stat WHERE id_book = ${id}`)[0]?.values[0][0] || 0;
+
+        if (stats.length > 0 && stats[0].values[0][0] !== null) {
+            const [tSecs, uPages, maxP, sTime, eTime, days, totalEv] = stats[0].values[0];
+
+            document.getElementById('b-time').textContent = formatReadingDuration(tSecs);
+            document.getElementById('b-raw-time').textContent = formatReadingDuration(rawT);
+            document.getElementById('b-days').textContent = days;
+            document.getElementById('b-avg-daily').textContent = formatReadingDuration(days > 0 ? tSecs / days : 0);
+            document.getElementById('b-speed').textContent = formatReadingDuration(totalEv > 0 ? tSecs / totalEv : 0);
+            document.getElementById('b-unique').textContent = uPages;
+
+            const d1 = formatReadingDate(sTime);
+            const d2 = formatReadingDate(eTime);
+            document.getElementById('b-dates').textContent = d1 === d2 ? d1 : `${d1} - ${d2}`;
+
+            const badge = document.getElementById('b-badge');
+            if (totPgs > 0) {
+                const pct = Math.min(Math.round((maxP/totPgs)*100), 100);
+                document.getElementById('b-progress').textContent = `${maxP} / ${totPgs} (${pct}%)`;
+                badge.style.display = pct >= 95 ? 'inline-block' : 'none';
+            } else {
+                document.getElementById('b-progress').textContent = `${maxP} (Total sin definir)`;
+                badge.style.display = 'none';
+            }
+
+            // ALGORITMO HORA PREFERIDA (Reemplaza a las notas inexistentes)
+            let favHourStr = "--:--";
+            try {
+                const hQ = db.exec(`
+                    SELECT strftime('%H', datetime(start_time, 'unixepoch', 'localtime')) as hr, COUNT(*) as c
+                    FROM page_stat WHERE id_book = ${id} GROUP BY hr ORDER BY c DESC LIMIT 1
+                `);
+                if (hQ.length > 0) {
+                    const hr = parseInt(hQ[0].values[0][0]);
+                    let period = "Madrugada";
+                    if (hr >= 6 && hr < 13) period = "Mañana";
+                    else if (hr >= 13 && hr < 19) period = "Tarde";
+                    else if (hr >= 19 && hr <= 23) period = "Noche";
+
+                    const hrFmt = hr.toString().padStart(2, '0') + ":00";
+                    favHourStr = `${hrFmt} (${period})`;
+                }
+            } catch(err) {}
+            document.getElementById('b-fav-hour').textContent = favHourStr;
+        }
+
+        KSHabits.renderBook(db, id, formatReadingDuration);
+        // --- CALENDARIOS CON CÍRCULOS MULTICOLOR ---
+        const calWrap = document.getElementById('calendar-wrapper');
+        calWrap.innerHTML = '';
+        
+        const mQ = db.exec(`
+            SELECT strftime('%Y-%m', datetime(start_time, 'unixepoch', 'localtime')) as ym,
+                   CAST(strftime('%d', datetime(start_time, 'unixepoch', 'localtime')) AS INTEGER) as d,
+                   COUNT(DISTINCT page)
+            FROM page_stat WHERE id_book = ${id} GROUP BY ym, d ORDER BY ym ASC, d ASC
+        `);
+
+        if (mQ.length > 0) {
+            const mData = {};
+            let bookMaxP = 0; 
+            mQ[0].values.forEach(r => {
+                if (!mData[r[0]]) mData[r[0]] = {};
+                mData[r[0]][r[1]] = r[2];
+                if (r[2] > bookMaxP) bookMaxP = r[2];
+            });
+
+            const bookStep = bookMaxP / 4 || 1;
+            const mNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const dayNames = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+
+            Object.keys(mData).forEach(ym => {
+                const [yStr, mStr] = ym.split('-');
+                const year = parseInt(yStr); const month = parseInt(mStr) - 1;
+
+                const box = document.createElement('div'); box.className = 'cal-month-box';
+                const title = document.createElement('div'); title.className = 'cal-month-title';
+                title.textContent = `${mNames[month]} ${year}`; box.appendChild(title);
+
+                const grid = document.createElement('div'); grid.className = 'cal-grid';
+                
+                dayNames.forEach(d => {
+                    const h = document.createElement('div'); h.className = 'cal-header-cell'; h.textContent = d; grid.appendChild(h);
+                });
+
+                const daysInM = new Date(year, month + 1, 0).getDate();
+                const fDay = new Date(year, month, 1).getDay();
+                const pad = fDay === 0 ? 6 : fDay - 1;
+
+                for (let i = 0; i < pad; i++) {
+                    const empty = document.createElement('div'); empty.className = 'cal-cell cal-empty'; grid.appendChild(empty);
+                }
+
+                for (let d = 1; d <= daysInM; d++) {
+                    const cell = document.createElement('div'); cell.className = 'cal-cell';
+                    
+                    const num = document.createElement('div'); num.className = 'cal-day-num'; num.textContent = d;
+                    cell.appendChild(num);
+
+                    if (mData[ym][d]) {
+                        cell.classList.add('cal-active');
+                        
+                        const circle = document.createElement('div');
+                        circle.className = 'cal-circle';
+                        
+                        const pgsNum = mData[ym][d];
+                        const level = readingLevel(pgsNum);
+                        cell.classList.add('lvl-' + level);
+                        circle.classList.add('lvl-' + level);
+                        cell.title = `${pgsNum} páginas únicas leídas`;
+                        
+                        const pgs = document.createElement('div'); pgs.className = 'cal-read-val'; pgs.textContent = pgsNum;
+                        
+                        circle.appendChild(pgs);
+                        cell.appendChild(circle);
+                    }
+                    grid.appendChild(cell);
+                }
+                box.appendChild(grid); calWrap.appendChild(box);
+            });
+        }
+    }
+
+    
+    // --- EXPORTACIÓN PARA NOTION (versión más rápida) ---
+    const btnExport = document.getElementById('btn-export');
+    btnExport.addEventListener('click', async () => {
+        const origTxt = btnExport.textContent;
+        btnExport.textContent = 'Renderizando...';
+        btnExport.disabled = true;
+
+        const node = document.getElementById('export-node');
+        const usingScene = node.getAttribute('data-bg') !== 'none';
+        const computedBg = getComputedStyle(node).backgroundColor;
+        let unfreeze = () => {};
+        let clipboard;
+
+        try {
+            clipboard = KSExport.startClipboardCopy();
+            await KSExport.withTimeout(document.fonts.ready, 15000, 'No se terminaron de cargar las fuentes.');
+            void node.offsetHeight;
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+            unfreeze = freezeLineBreaks(node);
+
+            const canvas = await KSExport.render(node, {
+                pixelRatio: KSExport.pixelRatio(node),
+                backgroundColor: usingScene ? undefined : computedBg,
+                cacheBust: false,
+                style: { margin: '0', boxShadow: 'none' }
+            });
+            await clipboard.finish(canvas);
+            btnExport.textContent = '¡Copiado!';
+        } catch (error) {
+            clipboard?.cancel(error);
+            console.error('Error:', error);
+            btnExport.textContent = 'No se pudo copiar';
+            btnExport.title = error.message;
+        } finally {
+            unfreeze();
+            setTimeout(() => { btnExport.textContent = origTxt; btnExport.disabled = false; }, 2200);
+        }
+    });
+</script>
+<script>
+(function(){
+  const btnTheme = document.getElementById('btn-theme');
+  function syncThemeBtn(){ const dark = document.documentElement.getAttribute('data-theme') === 'dark'; btnTheme.textContent = dark ? '☀️ Tema claro' : '🌙 Tema oscuro'; }
+  syncThemeBtn();
+  btnTheme.addEventListener('click', syncThemeBtn);
+  const globalBtn = document.getElementById('btn-global');
+  const annualBtn = document.getElementById('btn-annual');
+  const selectPanel = document.getElementById('book-select-panel');
+  function setActive(which){
+    globalBtn.classList.toggle('active-view', which === 'global');
+    annualBtn.classList.toggle('active-view', which === 'annual');
+  }
+  globalBtn.addEventListener('click', ()=>setActive('global'));
+  annualBtn.addEventListener('click', ()=>setActive('annual'));
+  selectPanel.addEventListener('click', (e)=>{ if (e.target.closest('.custom-select-option')) setActive('book'); });
+  const input = document.getElementById('fileInput');
+  input.addEventListener('change', () => { const file = input.files && input.files[0]; document.getElementById('file-indicator').textContent = file ? 'Archivo seleccionado: ' + file.name : ''; });
+  document.getElementById('btn-change-file').addEventListener('click', () => { document.getElementById('file-indicator').textContent = ''; document.getElementById('studio-settings').open = false; setActive('global'); });
+})();
+</script>
+</body>
+</html>

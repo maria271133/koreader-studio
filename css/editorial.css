@@ -1,0 +1,43 @@
+/* Clear interface typography, with an editorial treatment for books. */
+:root{--font-sans:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--title-ink:#203e33;--section-ink:#535334;--subtitle-ink:#984a34;--detail-ink:#43594c;--title-shadow:0 2px 3px rgba(32,62,51,.16)}
+[data-theme="dark"]{--title-ink:#fff0cc;--section-ink:#d3c9a1;--subtitle-ink:#ffb69b;--detail-ink:#d1dbc9;--title-shadow:0 2px 4px rgba(0,0,0,.4)}
+.hero h1,.page-title,.magic-banner h1,.compact-page-heading h1,.habits-heading h2,.habit-panel h2,.habit-brief>summary,#export-node .heatmap-title,#export-node .cal-month-title,#export-node .book-title,#book-view .book-title,.habit-book-card h3,.tool-card h3,.habit-year-title{text-shadow:var(--title-shadow)}
+body{-webkit-font-smoothing:antialiased}
+.brand{font-family:var(--font-serif);font-weight:600;font-size:1.9rem;letter-spacing:-.025em;color:var(--title-ink)}
+.brand-badge{font-family:var(--font-serif);letter-spacing:0}
+.header-chip,.eyebrow,.kicker{font-family:var(--font-sans);letter-spacing:.12em;font-weight:600}
+.page-title,.magic-banner h1,.compact-page-heading h1{font-family:var(--font-serif);font-weight:600;letter-spacing:-.025em;line-height:1.1;color:var(--title-ink)}
+.habits-heading h2,.habit-panel h2,#export-node .heatmap-title,#export-node .cal-month-title{font-family:var(--font-serif);font-style:italic;font-weight:600;letter-spacing:-.02em;line-height:1.15;color:var(--panel-heading,var(--section-ink))}
+#view-global>.habits-heading h2{font-size:clamp(2.6rem,4.8vw,3.8rem);letter-spacing:-.025em;font-weight:500;font-style:normal;color:var(--panel-ink,var(--title-ink))}
+.habit-panel h2,.habits-heading h2{font-size:clamp(1.9rem,3vw,2.45rem)}
+.habit-brief>summary{font:italic 600 1.35rem/1.4 var(--font-serif);color:var(--panel-heading,var(--section-ink));letter-spacing:-.01em;padding:3px 0}
+.habit-caption,.habits-heading p{line-height:1.7;letter-spacing:-.01em;color:var(--panel-muted,var(--detail-ink))}
+.page-subtitle,.magic-banner p,.section-subtitle,.hero-subtitle{font:italic 500 1.35rem/1.5 var(--font-serif);color:var(--subtitle-ink)}
+.audit-lbl,.stat-lbl,.cal-header-cell,.heat-legend{letter-spacing:0;text-transform:none}
+.audit-lbl{font-weight:600;color:var(--panel-ink,var(--section-ink))}
+#view-global .stat-lbl,.book-metrics .stat-lbl,.habit-day-value>span,.habit-hour-row>span{color:var(--panel-subtitle,var(--subtitle-ink))}
+#view-global .stat-val,.book-metrics .stat-val{font-family:var(--font-serif);font-weight:600;font-size:clamp(1.7rem,2.6vw,2.2rem);letter-spacing:0;font-variant-numeric:lining-nums tabular-nums;line-height:1.15}
+.habit-day-value>strong,.audit-val{font-variant-numeric:tabular-nums}
+.book-header{
+ position:relative;isolation:isolate;margin:0 0 36px;padding:40px 34px 42px;text-align:center;
+ border:1px solid var(--line-strong);border-radius:24px;
+ background:var(--panel-color,var(--inner-surface));box-shadow:var(--shadow-sm);
+}
+.book-header::before{content:"MI BIBLIOTECA";display:block;margin-bottom:18px;font:600 .66rem/1.5 var(--font-sans);letter-spacing:.18em;color:var(--panel-muted,var(--section-ink))}
+#export-node .book-title,#book-view .book-title{
+ font:500 clamp(3rem,5.8vw,5.1rem)/1.08 var(--font-serif);
+ letter-spacing:-.03em;max-width:24ch;overflow-wrap:anywhere;text-wrap:balance;margin:0 auto;color:var(--panel-ink,var(--title-ink));
+}
+#export-node .book-author,#book-view .book-author{
+ font:italic 500 clamp(1.6rem,2.8vw,2.1rem)/1.4 var(--font-serif);letter-spacing:.01em;text-transform:none;
+ color:var(--panel-subtitle,var(--subtitle-ink));margin:22px auto 0;overflow-wrap:anywhere;
+}
+.habit-book-card h3{font:600 clamp(1.6rem,2.4vw,2rem)/1.15 var(--font-serif);letter-spacing:-.025em;text-wrap:balance;color:var(--panel-ink,var(--title-ink))}
+.habit-book-card h3+.habit-caption{font:italic 500 1.15rem/1.5 var(--font-serif);color:var(--panel-subtitle,var(--subtitle-ink))}
+.habit-book-card .habit-caption{font-size:.76rem}
+.habit-year-title{font:italic 600 1.5rem/1.4 var(--font-serif);letter-spacing:-.025em;color:var(--panel-subtitle,var(--subtitle-ink))}
+.hero h1{font-weight:500;letter-spacing:-.055em;line-height:1.02;text-wrap:balance}
+.tool-card h3{font-family:var(--font-serif);font-weight:600;font-size:2rem;letter-spacing:-.02em;color:var(--section-ink)}
+.hero-subtitle{color:var(--subtitle-ink)}
+.btn,.mini-select,.custom-select-trigger{font-weight:500;letter-spacing:-.015em}
+@media(max-width:540px){.book-header{padding:24px 20px 28px;margin-bottom:28px}.brand{font-size:1.15rem}#export-node .book-title,#book-view .book-title{font-size:clamp(2.4rem,10vw,3.3rem)}}

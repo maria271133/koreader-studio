@@ -1,0 +1,18 @@
+/* Outer workspace, lifted sections, then lighter inner cards. */
+#export-node .habit-library{margin-top:26px;padding:24px;background:var(--panel-color,var(--section-surface));border:1px solid var(--line-strong);border-radius:24px;box-shadow:var(--shadow-md)}
+#export-node .habit-panel,#export-node .habit-brief{background:var(--panel-color,var(--section-surface));border-color:var(--line-strong);box-shadow:var(--shadow-md)}
+#export-node .habit-book-card,#export-node .stat-card{background:var(--panel-color,var(--inner-surface));border-color:var(--line-strong);box-shadow:var(--shadow-sm)}
+#export-node .habit-brief .audit-list,#export-node .habit-brief .heatmap-box{background:var(--panel-color,var(--inner-surface))!important;border-color:var(--line-strong);box-shadow:var(--shadow-sm);margin-top:18px}
+#export-node .cal-month-box{background:var(--panel-color,var(--section-surface))!important;border-color:var(--line-strong);box-shadow:var(--shadow-md)}
+#export-node .cal-cell:not(.cal-active):not(.cal-empty){background:var(--panel-color,var(--inner-surface));box-shadow:var(--shadow-sm)}
+#export-node .note-block .user-note-card{background:var(--panel-color,var(--inner-surface));border-color:var(--line-strong);box-shadow:var(--shadow-sm)}
+.studio-select-menu,.custom-select-panel{background:var(--panel-color,var(--section-surface));box-shadow:var(--shadow-md)}
+.hero,.magic-banner{box-shadow:var(--shadow-lg)}
+body::after{
+ content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+ background:var(--scatter-lights,none);
+ --star-gutter:max(0px,calc((100vw - 1240px)/2));
+ mask-image:linear-gradient(to right,#000 0 var(--star-gutter),transparent var(--star-gutter) calc(100% - var(--star-gutter)),#000 calc(100% - var(--star-gutter)) 100%);
+}
+body::before{background:linear-gradient(135deg,rgba(255,255,255,.06),transparent 45%)}
+@media(max-width:540px){#export-node .habit-library{padding:16px}}

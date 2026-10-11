@@ -1,0 +1,43 @@
+#export-node{background:var(--panel-color,var(--panel-strong));color:var(--text-main)}
+[data-theme="dark"] #export-node{background:var(--panel-color,var(--panel-strong));color:var(--text-main)}
+#export-node[data-bg="none"] .export-panel{background:transparent}
+#book-view{background:var(--panel-strong);color:var(--text-main)}
+.compact-page-heading{margin:6px 0 18px;padding:0 4px}
+.compact-page-heading h1{margin:0;font:700 clamp(2.15rem,4vw,3rem)/1.05 var(--font-serif);letter-spacing:-.025em}
+.hero-shell{grid-template-columns:1fr;min-height:0;padding:30px 32px}
+.page-title{font-size:clamp(2.5rem,5vw,4rem)}
+.tool-card{min-height:190px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.tool-card h3{margin-top:8px}.tool-card p{max-width:32ch}
+:root{--font-hand:'Handlee',cursive;--font-hand-size:1.65rem;--font-hand-weight:400}
+#notesContainer{justify-items:center;gap:24px}
+#notesContainer .note-chapter{display:none}
+#notesContainer .note-block{
+ width:100%;max-width:640px;min-height:0;aspect-ratio:4/3;
+ padding:clamp(14px,4vw,38px);margin:0;box-sizing:border-box;
+ display:flex;align-items:center;border-radius:24px;overflow:hidden;
+ background:var(--panel-color,var(--panel-surface));
+}
+[data-theme="dark"] #notesContainer .note-block{background:var(--panel-color,var(--panel-surface))}
+#notesContainer .note-block.ratio-1-1{aspect-ratio:1}
+#notesContainer .note-block.ratio-9-16{aspect-ratio:9/16}
+.note-block .note-content{width:100%;min-width:0;flex:none;display:flex;flex-direction:column;gap:var(--content-gap,22px);overflow-wrap:anywhere}
+.note-block .note-meta-row{margin:0;display:flex;flex-direction:column;gap:calc(var(--content-gap,22px) * .25)}
+.note-block .note-meta,.note-block .note-meta-chapter,.note-block .user-note-header{font-size:var(--meta-size,11px);line-height:1.4;letter-spacing:.06em}
+.note-block .note-meta-chapter{display:block;color:var(--accent)}
+.note-block .note-text{font-size:var(--quote-size,34px);line-height:1.35;margin:0}
+.note-block .dialogue-line{margin:0}
+.note-block .user-note-card{margin:0;padding:var(--content-gap,22px);border-radius:14px;box-shadow:none;background:rgba(128,150,131,.12);border:1px solid var(--line)}
+.note-block .user-note-header{margin:0 0 calc(var(--content-gap,22px) * .35)}
+.note-block .user-note-body{font-family:var(--font-hand)!important;font-size:var(--personal-size,32px)!important;font-weight:var(--font-hand-weight);line-height:1.35;white-space:pre-wrap!important;overflow-wrap:anywhere;max-width:100%;min-width:0;width:100%;margin:0}
+#notesContainer .note-block.zip-capture-card{width:640px;max-width:none;padding:38px;border-radius:24px;box-shadow:none}
+#export-node:not([data-bg="none"]) .note-block,.note-block.zip-capture-card.with-bg-image{
+ background-color:var(--panel-solid);
+ background-image:linear-gradient(rgba(var(--panel-rgb,var(--bg-card-rgb)),.82),rgba(var(--panel-rgb,var(--bg-card-rgb)),.82)),linear-gradient(var(--custom-tint),var(--custom-tint)),var(--custom-img);
+ background-size:cover;background-repeat:no-repeat;background-position:var(--custom-pos);
+}
+#export-node:not([data-bg="none"]) .export-panel{background:transparent!important}
+#export-node:not([data-bg="none"]) .export-scene{
+ background-image:linear-gradient(var(--custom-tint),var(--custom-tint)),var(--custom-img)!important;
+ background-position:var(--custom-pos),var(--custom-pos)!important;
+ background-size:cover,cover!important;
+}

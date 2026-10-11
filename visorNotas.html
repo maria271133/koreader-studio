@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOReader Studio · Visor de notas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@500;700&family=Life+Savers:wght@400;700&family=Fuzzy+Bubbles:wght@400;700&family=Handlee&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<link rel="stylesheet" href="./css/global.css">
+<link rel="stylesheet" href="./css/notas.css">
+<link rel="stylesheet" href="./css/componentes.css">
+<link rel="stylesheet" href="./css/variables.css">
+<link rel="stylesheet" href="./css/profundidad.css">
+<link rel="stylesheet" href="./css/editorial.css">
+<script src="./js/theme.js"></script>
+<script src="./js/background-lights.js" defer></script>
+</head>
+<body>
+<div class="workspace">
+  <header class="header-bar">
+    <a class="brand" href="./index.html" aria-label="Volver al inicio"><span class="brand-badge">✦</span><span>KOReader Studio.</span></a>
+    <div class="header-actions">
+      <a href="./index.html" class="btn btn-secondary" id="btn-home">🏠 Inicio</a>
+      <button id="btn-theme" class="btn" type="button">🌙 Tema</button>
+    </div>
+  </header>
+<section class="magic-banner"><div class="magic-banner-grid"><div class="magic-banner-copy"><div class="eyebrow">Visor de notas</div><h1>Visor de notas</h1><p>Tus citas y notas, a tu manera.</p></div><div class="magic-banner-scene" aria-hidden="true"></div></div></section>
+
+
+  
+<label class="upload-zone" id="upload-zone">
+    <div class="upload-icon">✨</div>
+    <div class="upload-text">Sube tu archivo HTML de notas</div>
+    <div class="upload-subtext">Importa, personaliza y exporta.</div>
+    <input type="file" id="fileInput" accept=".html,.htm,.txt">
+</label>
+
+<div class="nav-bar" id="nav-bar">
+    <div class="nav-left">
+        <details class="toolbar-group" id="style-tools">
+            <summary class="toolbar-summary">🎨 Personalizar captura</summary>
+            <div class="toolbar-panel">
+                <div class="bg-picker" id="bg-picker">
+                    <span class="bg-picker-label">Fondo</span>
+                    <button class="bg-swatch active" data-swatch="none" title="Sin fondo"></button>
+                    <button class="bg-swatch bg-swatch-custom" id="custom-bg-trigger" type="button" title="Subir tu propia imagen">🖼️</button>
+                    <button class="bg-swatch bg-swatch-custom" id="custom-bg-url-trigger" type="button" title="Usar una imagen desde un enlace">🔗</button>
+                    <input type="color" id="custom-bg-color" value="#7D73FF" title="Color del tinte" style="display:none;">
+                    <input type="range" id="custom-bg-opacity" min="0" max="80" value="38" title="Intensidad del tinte" style="display:none;">
+                    <input type="range" id="custom-bg-pos-x" min="0" max="100" value="50" title="Mover imagen horizontalmente" style="display:none;">
+                    <input type="range" id="custom-bg-pos-y" min="0" max="100" value="50" title="Mover imagen verticalmente" style="display:none;">
+                    <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp" style="display:none;">
+                    <span class="bg-picker-label">Panel</span>
+                    <input type="color" id="panel-color" value="#FFFFFF" title="Color del panel donde va el texto">
+                    <button type="button" class="panel-reset-btn" id="panel-color-reset" title="Volver al color original del panel">↺</button>
+                    <div class="bg-url-row" id="bg-url-row">
+                        <input type="text" id="bg-url-input" placeholder="Pega aquí el enlace de la imagen (https://...)" autocomplete="off" spellcheck="false">
+                        <button type="button" class="btn btn-primary" id="bg-url-apply">Usar</button>
+                    </div>
+                    <div class="bg-url-msg" id="bg-url-msg"></div>
+                </div>
+            </div>
+        </details>
+    </div>
+    <div class="nav-right">
+        <select id="font-vibe" class="mini-select" title="Tipografía de la nota personal">
+            <option value="hand" selected>✍️ Manuscrito · Handlee</option>
+            <option value="life">🌼 Life Savers</option>
+            <option value="fuzzy">🫧 Fuzzy Bubbles</option>
+            <option value="minimal">▫️ Minimalista</option>
+        </select>
+        <select id="aspect-ratio" class="mini-select" title="Proporción fija para galería">
+            <option value="" selected>Horizontal (4:3)</option>
+            <option value="ratio-1-1">◻️ Cuadrado (1:1)</option>
+            <option value="ratio-9-16">📱 Vertical (9:16)</option>
+        </select>
+        <button id="btn-export" class="btn btn-primary">📸 Capturar imagen</button>
+        <button id="btn-export-zip" class="btn">📦 Descargar ZIP</button>
+        <button id="btn-change-file" class="btn">🔄 Cambiar archivo</button>
+    </div>
+</div>
+
+<div id="export-node" data-bg="none">
+    <div class="export-scene"></div>
+    <div class="export-panel">
+        <div class="book-header">
+            <div class="book-title" id="b-title">Título del libro</div>
+            <div class="book-author" id="b-author">Autor</div>
+        </div>
+        <div id="notesContainer"></div>
+    </div>
+</div>
+
+
+</div>
+<script src="./js/export-utils.js"></script>
+<script src="./js/note-layout.js"></script>
+<script src="./js/select-menu.js"></script>
+<script>const btnTheme = document.getElementById('btn-theme');
+   const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('fileInput');
+    const exportNode = document.getElementById('export-node');
+    const navBar = document.getElementById('nav-bar');
+    const notesContainer = document.getElementById('notesContainer');
+
+    let bookData = { title: "", author: "", notes: [] };
+
+    // --- SELECTOR DE FONDO PARA LA CAPTURA (vista previa en vivo) ---
+    const bgSwatches = document.querySelectorAll('.bg-swatch');
+    document.querySelector('.bg-swatch[data-swatch="none"]').addEventListener('click', () => {
+        exportNode.setAttribute('data-bg', 'none');
+        bgSwatches.forEach(s => s.classList.remove('active'));
+        document.querySelector('.bg-swatch[data-swatch="none"]').classList.add('active');
+    });
+
+    // --- FONDO PERSONALIZADO: imagen propia + tinte de color a elección ---
+    const customTrigger = document.getElementById('custom-bg-trigger');
+    const customFileInput = document.getElementById('custom-bg-file');
+    const customColorInput = document.getElementById('custom-bg-color');
+    const customOpacityInput = document.getElementById('custom-bg-opacity');
+    const customPosXInput = document.getElementById('custom-bg-pos-x');
+    const customPosYInput = document.getElementById('custom-bg-pos-y');
+
+    function hexToRgb(hex) {
+        const m = hex.replace('#', '');
+        const bigint = parseInt(m, 16);
+        return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+    }
+    function applyCustomTint() {
+        const { r, g, b } = hexToRgb(customColorInput.value);
+        const alpha = customOpacityInput.value / 100;
+        exportNode.style.setProperty('--custom-tint', `rgba(${r}, ${g}, ${b}, ${alpha})`);
+    }
+    function applyCustomPos() {
+        exportNode.style.setProperty('--custom-pos', `${customPosXInput.value}% ${customPosYInput.value}%`);
+    }
+    // ==========================================================================
+    // IMAGEN DE FONDO: desde un archivo o desde un enlace
+    // Todo se convierte a una imagen incrustada antes de usarla, así la captura no
+    // depende de internet ni de que la web original siga permitiéndolo.
+    // Formatos: PNG, JPG, WebP, GIF, SVG, AVIF y BMP (HEIC no lo abre ningún navegador).
+    // El tipo real se detecta por el contenido, no por la extensión, porque algunos
+    // sistemas no reconocen bien .webp o .avif y la imagen se quedaría en blanco.
+    // ==========================================================================
+    const bgUrlTrigger = document.getElementById('custom-bg-url-trigger');
+    const bgUrlRow = document.getElementById('bg-url-row');
+    const bgUrlInput = document.getElementById('bg-url-input');
+    const bgUrlApply = document.getElementById('bg-url-apply');
+    const bgMsg = document.getElementById('bg-url-msg');
+
+    const BG_ERRORS = {
+        empty: 'Pega primero el enlace de la imagen.',
+        fetch: 'No se pudo descargar la imagen. Es probable que esa web no permita usar sus imágenes en otras páginas. Descárgala y súbela con 🖼️.',
+        http: 'Ese enlace no responde o la imagen ya no existe. Revisa que esté bien copiado.',
+        notimage: 'Ese enlace no es una imagen directa. Haz clic derecho sobre la imagen y elige «Copiar dirección de la imagen» (no la dirección de la página).',
+        heic: 'El formato HEIC/HEIF no lo abren los navegadores. Conviértela a JPG o PNG.',
+        decode: 'El navegador no puede leer esta imagen. Formatos válidos: PNG, JPG, WebP, GIF, SVG, AVIF y BMP.'
+    };
+
+    function setBgMsg(text, isError) {
+        bgMsg.textContent = text || '';
+        bgMsg.classList.toggle('error', !!isError);
+        bgMsg.style.display = text ? 'block' : 'none';
+    }
+    function resetBgUrlUi() {
+        bgUrlRow.style.display = 'none';
+        bgUrlInput.value = '';
+        setBgMsg('');
+    }
+
+    function readBlob(blob, mode) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result);
+            r.onerror = () => reject(new Error('decode'));
+            if (mode === 'buffer') r.readAsArrayBuffer(blob); else r.readAsDataURL(blob);
+        });
+    }
+
+    async function sniffImageType(blob) {
+        const buf = new Uint8Array(await readBlob(blob.slice(0, 1024), 'buffer'));
+        const asc = (a, b) => String.fromCharCode.apply(null, Array.from(buf.slice(a, b)));
+        if (buf[0] === 0x89 && asc(1, 4) === 'PNG') return 'image/png';
+        if (buf[0] === 0xFF && buf[1] === 0xD8) return 'image/jpeg';
+        if (asc(0, 4) === 'GIF8') return 'image/gif';
+        if (asc(0, 4) === 'RIFF' && asc(8, 12) === 'WEBP') return 'image/webp';
+        if (asc(0, 2) === 'BM') return 'image/bmp';
+        if (asc(4, 8) === 'ftyp') {
+            const brand = asc(8, 12);
+            if (brand === 'avif' || brand === 'avis') return 'image/avif';
+            if (/^(heic|heix|hevc|hevx|mif1|msf1)/.test(brand)) return 'image/heic';
+        }
+        if (asc(0, buf.length).toLowerCase().indexOf('<svg') !== -1) return 'image/svg+xml';
+        return null;
+    }
+
+    async function prepareBgImage(blob) {
+        const sniffed = await sniffImageType(blob);
+        const type = sniffed || (blob.type && blob.type.indexOf('image/') === 0 ? blob.type : null);
+        if (!type) throw new Error('notimage');
+        if (/heic|heif/.test(type)) throw new Error('heic');
+        const dataUrl = await readBlob(new Blob([blob], { type }), 'url');
+        // Comprobamos que el navegador realmente sabe pintarla antes de usarla
+        await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('decode'));
+            img.src = dataUrl;
+        });
+        return dataUrl;
+    }
+
+    async function fetchBgImage(rawUrl) {
+        let url = (rawUrl || '').trim();
+        if (!url) throw new Error('empty');
+        if (!/^data:image\//i.test(url)) {
+            if (url.indexOf('//') === 0) url = 'https:' + url;
+            else if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        }
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 20000);
+        let res;
+        try {
+            res = await fetch(url, { mode: 'cors', signal: ctrl.signal, referrerPolicy: 'no-referrer' });
+        } catch (e) {
+            throw new Error('fetch');
+        } finally {
+            clearTimeout(timer);
+        }
+        if (!res.ok) throw new Error('http');
+        return res.blob();
+    }
+
+    function applyCustomImage(dataUrl) {
+        exportNode.style.setProperty('--custom-img', `url("${dataUrl}")`);
+        applyCustomTint();
+        applyCustomPos();
+        exportNode.setAttribute('data-bg', 'custom');
+        bgSwatches.forEach(s => s.classList.remove('active'));
+        customTrigger.classList.add('active');
+        customColorInput.style.display = 'inline-block';
+        customOpacityInput.style.display = 'inline-block';
+        customPosXInput.style.display = 'inline-block';
+        customPosYInput.style.display = 'inline-block';
+    }
+
+    customTrigger.addEventListener('click', () => customFileInput.click());
+    customFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            applyCustomImage(await prepareBgImage(file));
+            setBgMsg('');
+        } catch (err) {
+            setBgMsg(BG_ERRORS[err.message] || BG_ERRORS.decode, true);
+        }
+        customFileInput.value = '';
+    });
+
+    async function applyBgFromUrl() {
+        const label = bgUrlApply.textContent;
+        bgUrlApply.disabled = true;
+        bgUrlApply.textContent = 'Cargando...';
+        setBgMsg('');
+        try {
+            const blob = await fetchBgImage(bgUrlInput.value);
+            applyCustomImage(await prepareBgImage(blob));
+            bgUrlRow.style.display = 'none';
+        } catch (err) {
+            setBgMsg(BG_ERRORS[err.message] || BG_ERRORS.decode, true);
+        } finally {
+            bgUrlApply.disabled = false;
+            bgUrlApply.textContent = label;
+        }
+    }
+    bgUrlTrigger.addEventListener('click', () => {
+        const open = bgUrlRow.style.display === 'flex';
+        bgUrlRow.style.display = open ? 'none' : 'flex';
+        if (!open) bgUrlInput.focus();
+    });
+    bgUrlApply.addEventListener('click', applyBgFromUrl);
+    bgUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); applyBgFromUrl(); }
+    });
+
+    // ==========================================================================
+    // DIÁLOGOS: cada intervención en su propia línea
+    // Una raya que abre una intervención nueva va después de un punto, o después de
+    // ? ! … » cuando lo siguiente NO empieza en minúscula (si empieza en minúscula es
+    // el inciso del narrador: «—¿Vienes? —preguntó él.»). Las rayas de los incisos
+    // («—Hola —dijo Juan— ¿qué tal?») y los guiones de palabras compuestas no se tocan.
+    // ==========================================================================
+    function splitDialogue(raw) {
+        const out = [];
+        String(raw).split('\n').forEach(part => {
+            const text = part.trim();
+            if (!text) return;
+            const re = /\s*([—–―-])(?=[^\s—–―-])/g;
+            let start = 0, m;
+            while ((m = re.exec(text)) !== null) {
+                const prev = text[m.index - 1];
+                const next = text[m.index + m[0].length];
+                const isEllipsisDots = prev === '.' && text[m.index - 2] === '.';
+                const hard = prev === '.' && !isEllipsisDots;
+                const soft = /[?!…»”"’]/.test(prev) || isEllipsisDots;
+                const startsLower = /\p{Ll}/u.test(next);
+                if (hard || (soft && !startsLower)) {
+                    const chunk = text.slice(start, m.index).trim();
+                    if (chunk) out.push(chunk);
+                    start = m.index + m[0].length - 1; // la raya pasa a la línea siguiente
+                }
+            }
+            const rest = text.slice(start).trim();
+            if (rest) out.push(rest);
+        });
+        return out;
+    }
+
+    function buildQuoteEl(text) {
+        const lines = splitDialogue(text);
+        const wrap = document.createElement('div');
+        wrap.className = 'note-text';
+        if (lines.length === 0) return wrap;
+
+        const isDash = l => /^[—–―-]/.test(l);
+        const hasDash = lines.some(isDash);
+
+        if (lines.length === 1 && !hasDash) {
+            wrap.textContent = `“${lines[0]}”`;
+            return wrap;
+        }
+
+        wrap.classList.add('is-dialogue');
+        lines.forEach((line, i) => {
+            const p = document.createElement('div');
+            p.className = 'dialogue-line' + (isDash(line) ? ' dash' : '');
+            // Con diálogo, la raya ya hace de comillas. Sin raya (varios párrafos), mantenemos las comillas.
+            p.textContent = hasDash ? line : `${i === 0 ? '“' : ''}${line}${i === lines.length - 1 ? '”' : ''}`;
+            wrap.appendChild(p);
+        });
+        return wrap;
+    }
+
+    // ==========================================================================
+    // COLOR DEL PANEL (el fondo donde va el texto)
+    // Sin tocarlo, sigue el tema claro/oscuro. Si eliges un color, se aplica tanto al
+    // panel sin imagen como al panel semitransparente que va sobre una imagen de fondo.
+    // Con colores claros, el texto pasa solo a tono oscuro para que siga leyéndose.
+    // ==========================================================================
+    const panelColorInput = document.getElementById('panel-color');
+    const panelColorReset = document.getElementById('panel-color-reset');
+    const PANEL_OVERRIDES = ['--panel-color', '--panel-rgb', '--text-main', '--text-muted', '--text-meta', '--text-soft', '--text-faint', '--border-color', '--heat-empty'];
+    let panelColorCustom = false;
+
+    function syncPanelPicker() {
+        if (panelColorCustom) return;
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim();
+        if (/^#[0-9a-f]{6}$/i.test(v)) panelColorInput.value = v;
+    }
+    function applyPanelColor() {
+        const hex = panelColorInput.value;
+        const { r, g, b } = hexToRgb(hex);
+        panelColorCustom = true;
+        exportNode.style.setProperty('--panel-color', hex);
+        exportNode.style.setProperty('--panel-rgb', `${r}, ${g}, ${b}`);
+        const light = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6;
+        exportNode.style.setProperty('--text-main', light ? '#2A2013' : '#fff8ed');
+        exportNode.style.setProperty('--text-soft', light ? '#5C5140' : '#e1ddcd');
+        exportNode.style.setProperty('--text-faint', light ? '#5C5140' : '#e1ddcd');
+        exportNode.style.setProperty('--text-muted', light ? '#5C5140' : '#e1ddcd');
+        exportNode.style.setProperty('--text-meta', light ? '#5C5140' : '#e1ddcd');
+        exportNode.style.setProperty('--border-color', light ? 'rgba(42,32,19,.22)' : 'rgba(255,248,237,.24)');
+    }
+    function resetPanelColor() {
+        panelColorCustom = false;
+        PANEL_OVERRIDES.forEach(k => exportNode.style.removeProperty(k));
+        syncPanelPicker();
+    }
+    panelColorInput.addEventListener('input', applyPanelColor);
+    panelColorReset.addEventListener('click', resetPanelColor);
+    syncPanelPicker();
+    new MutationObserver(syncPanelPicker).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // ==========================================================================
+    // BLINDAJE ANTI-SOLAPE PARA LA CAPTURA
+    // Al capturar, el navegador copia la altura de cada texto en píxeles. Si en la copia
+    // una línea se parte distinto que en pantalla (por medio píxel de diferencia en la
+    // fuente), el texto sobra por abajo y pisa al siguiente: título con autor, cita con
+    // nota personal... Para evitarlo, durante la captura fijamos los saltos de línea
+    // exactos que ya ves en pantalla, y los devolvemos a la normalidad al terminar.
+    // ==========================================================================
+    const FREEZE_SELECTOR = '.book-title, .book-author, .note-meta, .note-meta-chapter, .note-text, .dialogue-line, .user-note-body, .user-note-header, .note-chapter, .audit-lbl, .audit-val, .heatmap-title, .cal-month-title';
+    function freezeLineBreaks(root) {
+        const undo = [];
+        try {
+            const range = document.createRange();
+            root.querySelectorAll(FREEZE_SELECTOR).forEach(el => {
+                if (el.childElementCount || el.childNodes.length !== 1 || el.firstChild.nodeType !== 3) return;
+                if (el.getClientRects().length === 0) return;
+
+                const textNode = el.firstChild;
+                const original = textNode.nodeValue;
+                const breaks = [];
+                let lastTop = null;
+
+                const visit = (start, end) => {
+                    range.setStart(textNode, start);
+                    range.setEnd(textNode, end);
+                    const rects = range.getClientRects();
+                    if (!rects.length) return;
+                    // Palabra partida entre dos líneas (p. ej. por un guion): la miramos letra a letra
+                    if (rects.length > 1 && end - start > 1) {
+                        for (let i = start; i < end; i++) visit(i, i + 1);
+                        return;
+                    }
+                    const r = rects[0];
+                    if (lastTop !== null && r.top - lastTop > r.height * 0.5) breaks.push(start);
+                    lastTop = r.top;
+                };
+
+                const re = /\S+/g;
+                let m;
+                while ((m = re.exec(original)) !== null) visit(m.index, m.index + m[0].length);
+
+                const pieces = [];
+                let from = 0;
+                breaks.forEach(b => { pieces.push(original.slice(from, b)); from = b; });
+                pieces.push(original.slice(from));
+                const frozenText = pieces.map(p => p.trim()).join('\n');
+
+                const prevWhiteSpace = el.style.whiteSpace;
+                el.style.whiteSpace = 'pre-wrap';
+                textNode.nodeValue = frozenText;
+                undo.push(() => { textNode.nodeValue = original; el.style.whiteSpace = prevWhiteSpace; });
+            });
+        } catch (err) {
+            console.warn('No se pudieron fijar los saltos de línea:', err);
+        }
+        return () => undo.forEach(fn => fn());
+    }
+
+    customColorInput.addEventListener('input', applyCustomTint);
+    customOpacityInput.addEventListener('input', applyCustomTint);
+    customPosXInput.addEventListener('input', applyCustomPos);
+    customPosYInput.addEventListener('input', applyCustomPos);
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            const reader = new FileReader();
+            reader.onload = (event) => parseKOReaderHTML(event.target.result);
+            reader.onerror = () => { alert('No se pudo leer el archivo.'); fileInput.value = ''; };
+            reader.readAsText(e.target.files[0]);
+        }
+    });
+
+    // Texto de un elemento conservando <br>, párrafos y saltos de línea (textContent los pierde)
+    function textWithBreaks(el) {
+        const clone = el.cloneNode(true);
+        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        clone.querySelectorAll('p, div').forEach(b => b.append('\n'));
+        return clone.textContent.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+    }
+
+    function parseKOReaderHTML(htmlString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+        if (!doc.querySelector('body div[style*="padding-top"]')) {
+            alert('Este HTML no contiene anotaciones en el formato compatible.');
+            fileInput.value = '';
+            return;
+        }
+        
+        const titleEl = doc.querySelector('h2');
+        const authorEl = doc.querySelector('h5');
+        
+        document.getElementById('b-title').textContent = titleEl ? titleEl.textContent.trim() : "Libro sin título";
+        document.getElementById('b-author').textContent = authorEl ? authorEl.textContent.trim() : "Autor desconocido";
+
+        bookData.title = document.getElementById('b-title').textContent;
+        bookData.author = document.getElementById('b-author').textContent;
+        bookData.notes = [];
+        let currentChapter = "Introducción";
+        
+        const highlights = doc.querySelectorAll('body div[style*="padding-top"]');
+        
+        if (highlights.length > 0) {
+            highlights.forEach(hl => {
+                const prevElem = hl.previousElementSibling;
+                if (prevElem && prevElem.style.fontSize === '14pt') {
+                    currentChapter = prevElem.textContent.trim();
+                }
+
+                const metaDiv = hl.querySelector('div[style*="font-size:10pt"]');
+                let dateStr = "";
+                let pageStr = "";
+                if (metaDiv) {
+                    const spans = metaDiv.querySelectorAll('span');
+                    if (spans.length >= 1) dateStr = spans[0].textContent.trim();
+                    if (metaDiv.textContent.includes(':')) {
+                        const parts = metaDiv.textContent.split(':');
+                        pageStr = parts[parts.length - 1].trim();
+                    }
+                }
+
+                let formattedDate = dateStr;
+                if (dateStr.includes('/')) {
+                    const p = dateStr.split('/');
+                    if (p.length === 3) formattedDate = `${p[1]}/${p[0]}/${p[2].length === 2 ? '20' + p[2] : p[2]}`;
+                }
+
+                const textDiv = hl.querySelector('div[style*="font-size:12pt"]');
+                let highlightText = textDiv ? textWithBreaks(textDiv) : "";
+
+                const noteDiv = hl.querySelector('div[style*="font-size:11pt"]');
+                let userNoteText = noteDiv ? textWithBreaks(noteDiv) : "";
+
+                if (highlightText || userNoteText) {
+                    bookData.notes.push({
+                        chapter: currentChapter,
+                        text: highlightText,
+                        userNote: userNoteText,
+                        date: formattedDate,
+                        page: pageStr
+                    });
+                }
+            });
+        }
+
+        renderNotesUI();
+    }
+
+    function renderNotesUI() {
+        uploadZone.style.display = 'none';
+        exportNode.style.display = 'block';
+        navBar.style.display = 'flex';
+        notesContainer.innerHTML = '';
+        
+        let currentRenderedChapter = null;
+
+        bookData.notes.forEach(note => {
+            if (note.chapter !== currentRenderedChapter) {
+                const chapterEl = document.createElement('h2');
+                chapterEl.className = 'note-chapter';
+                chapterEl.textContent = note.chapter;
+                notesContainer.appendChild(chapterEl);
+                currentRenderedChapter = note.chapter;
+            }
+
+            const noteBlock = document.createElement('div');
+            noteBlock.className = 'note-block';
+            const ratio = document.getElementById('aspect-ratio').value;
+            if (ratio) noteBlock.classList.add(ratio);
+            const content = document.createElement('div');
+            content.className = 'note-content';
+            noteBlock.appendChild(content);
+
+            const metaRow = document.createElement('div');
+            metaRow.className = 'note-meta-row';
+
+            const metaEl = document.createElement('div');
+            metaEl.className = 'note-meta';
+            metaEl.textContent = `${/^Pos\./.test(note.page) ? note.page : 'Pág. ' + note.page} — ${note.date}`;
+            metaRow.appendChild(metaEl);
+
+            const chapterEl = document.createElement('div');
+            chapterEl.className = 'note-meta-chapter';
+            chapterEl.textContent = `— ${note.chapter}`;
+            metaRow.appendChild(chapterEl);
+
+            content.appendChild(metaRow);
+
+            if (note.text) content.appendChild(buildQuoteEl(note.text));
+
+            if (note.userNote) {
+                const card = document.createElement('div');
+                card.className = 'user-note-card';
+
+                const header = document.createElement('div');
+                header.className = 'user-note-header';
+                header.textContent = '✏️ Nota personal';
+                
+                const body = document.createElement('div');
+                body.className = 'user-note-body';
+                body.textContent = note.userNote;
+
+                card.appendChild(header);
+                card.appendChild(body);
+                content.appendChild(card);
+            }
+
+            notesContainer.appendChild(noteBlock);
+        });
+        // Restaurar la tipografía que se haya elegido antes de cargar un archivo.
+        const selectedFont = document.getElementById('font-vibe');
+        if (selectedFont && typeof fontVibeMap !== 'undefined') {
+            const chosen = fontVibeMap[selectedFont.value] || fontVibeMap.hand;
+            document.querySelectorAll('.user-note-body').forEach(el => {
+                el.style.fontFamily = chosen.family;
+            });
+        }
+        KSNoteLayout.fitAll();
+        document.fonts.ready.then(() => KSNoteLayout.fitAll());
+    }
+
+    // --- SELECTOR DE "VIBE" TIPOGRÁFICA PARA LAS NOTAS PERSONALES ---
+    const fontVibeMap = {
+        hand:       { family: "'Handlee', cursive",        size: '1.65rem', weight:400 },
+        life:       { family: "'Life Savers', cursive",    size: '1.5rem', weight:700 },
+        fuzzy:      { family: "'Fuzzy Bubbles', cursive",  size: '1.5rem', weight:700 },
+        minimal:    { family: "'Inter', sans-serif",        size: '1.05rem' }
+    };
+    const fontVibeSelect = document.getElementById('font-vibe');
+    // El selector debe funcionar incluso cuando el HTML original no incluía estilos de fuente.
+
+    fontVibeSelect.addEventListener('change', () => {
+        const vibe = fontVibeMap[fontVibeSelect.value] || fontVibeMap.hand;
+        // Variable CSS global: actualiza en tiempo real todas las .user-note-body a la vez,
+        // tanto en la vista previa como en la tarjeta que se captura después
+        document.documentElement.style.setProperty('--font-hand', vibe.family);
+        document.documentElement.style.setProperty('--font-hand-size', vibe.size);
+        document.documentElement.style.setProperty('--font-hand-weight', vibe.weight || 600);
+        document.querySelectorAll('.user-note-body').forEach(el => {
+            el.style.fontFamily = vibe.family;
+        });
+        KSNoteLayout.fitAll();
+        document.fonts.ready.then(() => KSNoteLayout.fitAll());
+    });
+
+    // --- SELECTOR DE PROPORCIÓN FIJA PARA GALERÍA ---
+    const aspectRatioSelect = document.getElementById('aspect-ratio');
+    aspectRatioSelect.addEventListener('change', () => {
+        const ratioClass = aspectRatioSelect.value; // '', 'ratio-1-1' o 'ratio-9-16'
+        document.querySelectorAll('#notesContainer .note-block').forEach(block => {
+            block.classList.remove('ratio-1-1', 'ratio-9-16');
+            if (ratioClass) block.classList.add(ratioClass);
+        });
+        notesContainer.classList.toggle('ratio-mode', !!ratioClass);
+        KSNoteLayout.fitAll();
+    });
+    new ResizeObserver(() => KSNoteLayout.fitAll()).observe(notesContainer);
+
+    // --- CAMBIAR ARCHIVO SIN RECARGAR LA PÁGINA ---
+    document.getElementById('btn-change-file').addEventListener('click', () => {
+        bookData = { title: "", author: "", notes: [] };
+        fileInput.value = '';
+        exportNode.style.display = 'none';
+        navBar.style.display = 'none';
+        uploadZone.style.display = 'flex';
+        notesContainer.innerHTML = '';
+        exportNode.setAttribute('data-bg', 'none');
+        bgSwatches.forEach(s => s.classList.remove('active'));
+        document.querySelector('.bg-swatch[data-swatch="none"]').classList.add('active');
+        customTrigger.classList.remove('active');
+        customColorInput.style.display = 'none';
+        customOpacityInput.style.display = 'none';
+        customPosXInput.style.display = 'none';
+        customPosYInput.style.display = 'none';
+        customPosXInput.value = 50;
+        customPosYInput.value = 50;
+        customFileInput.value = '';
+        resetBgUrlUi();
+        exportNode.style.removeProperty('--custom-img');
+        exportNode.style.removeProperty('--custom-tint');
+        exportNode.style.removeProperty('--custom-pos');
+        fontVibeSelect.value = 'hand';
+        fontVibeSelect.dispatchEvent(new Event('change'));
+        document.documentElement.style.removeProperty('--font-hand');
+        document.documentElement.style.removeProperty('--font-hand-size');
+        document.documentElement.style.removeProperty('--font-hand-weight');
+        aspectRatioSelect.value = '';
+        aspectRatioSelect.dispatchEvent(new Event('change'));
+        notesContainer.classList.remove('ratio-mode');
+        resetPanelColor();
+    });
+
+    const btnExport = document.getElementById('btn-export');
+    btnExport.addEventListener('click', async () => {
+        const origTxt = btnExport.textContent;
+        btnExport.textContent = 'Preparando...';
+        btnExport.disabled = true;
+
+        const node = document.getElementById('export-node');
+        const usingScene = node.getAttribute('data-bg') !== 'none';
+        const computedBg = getComputedStyle(node).backgroundColor;
+
+        let unfreeze = () => {};
+        let clipboard;
+
+        try {
+            clipboard = KSExport.startClipboardCopy();
+            // Esperamos a que todas las fuentes estén cargadas y renderizadas de verdad
+            await KSExport.withTimeout(document.fonts.ready, 15000, 'No se terminaron de cargar las fuentes.');
+            void node.offsetHeight;
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+            const canvas = await KSExport.render(node, {
+                pixelRatio: KSExport.pixelRatio(node),
+                backgroundColor: usingScene ? undefined : computedBg,
+                cacheBust: false,
+                prepare: clone => { KSNoteLayout.fitAll(clone); },
+                style: { margin: '0', boxShadow: 'none' }
+            });
+            await clipboard.finish(canvas);
+            btnExport.textContent = '¡Copiado!';
+        } catch (error) {
+            clipboard?.cancel(error);
+            console.error('Error en captura:', error);
+            btnExport.textContent = 'No se pudo copiar';
+            btnExport.title = error.message;
+        } finally {
+            unfreeze();
+            setTimeout(() => { btnExport.textContent = origTxt; btnExport.disabled = false; }, 2500);
+        }
+    });
+
+    // --- EXPORTACIÓN MASIVA DE CITAS EN ZIP ---
+    const btnExportZip = document.getElementById('btn-export-zip');
+    btnExportZip.addEventListener('click', async () => {
+        const origZipTxt = btnExportZip.textContent;
+        const blocks = Array.from(document.querySelectorAll('#notesContainer .note-block'));
+
+        if (blocks.length === 0) {
+            btnExportZip.textContent = 'No hay citas';
+            setTimeout(() => { btnExportZip.textContent = origZipTxt; }, 2000);
+            return;
+        }
+
+        btnExportZip.disabled = true;
+        btnExport.disabled = true;
+        try {
+            const zip = new JSZip();
+            await KSExport.withTimeout(document.fonts.ready, 15000, 'No se terminaron de cargar las fuentes.');
+            const hasCustomImage = exportNode.getAttribute('data-bg') === 'custom';
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                btnExportZip.textContent = 'Procesando ' + (i + 1) + ' de ' + blocks.length + '...';
+                const canvas = await KSExport.render(block, {
+                    cacheBust: false,
+                    prepare: clone => {
+                        clone.classList.add('zip-capture-card');
+                        if (hasCustomImage) clone.classList.add('with-bg-image');
+                        KSNoteLayout.fit(clone, 640);
+                    }
+                });
+                zip.file('cita_' + (i + 1) + '.jpg', canvas.toDataURL('image/jpeg', .9).split(',')[1], {base64:true});
+            }
+            btnExportZip.textContent = 'Comprimiendo ZIP...';
+            const zipBlob = await KSExport.withTimeout(zip.generateAsync({type:'blob'}), 45000, 'La compresión tardó demasiado.');
+            const safeTitle = (bookData.title || 'Libro').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Libro';
+            saveAs(zipBlob, 'Citas_' + safeTitle + '.zip');
+            btnExportZip.textContent = 'ZIP descargado';
+        } catch (error) {
+            console.error(error);
+            btnExportZip.textContent = 'Error al exportar ZIP';
+        } finally {
+            setTimeout(() => { btnExportZip.textContent = origZipTxt; btnExportZip.disabled = false; btnExport.disabled = false; }, 2500);
+        }
+    });</script>
+<script>
+(function(){
+  const btnTheme = document.getElementById('btn-theme');
+  function syncThemeBtn(){ const dark = document.documentElement.getAttribute('data-theme') === 'dark'; btnTheme.textContent = dark ? '☀️ Tema claro' : '🌙 Tema oscuro'; }
+  syncThemeBtn();
+  btnTheme.addEventListener('click', syncThemeBtn);
+})();
+</script>
+</body>
+</html>

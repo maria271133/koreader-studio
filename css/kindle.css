@@ -1,0 +1,10 @@
+#export-node{background:var(--panel-strong);color:var(--text-main)}
+[data-theme="dark"] #export-node{background:var(--panel-strong);color:var(--text-main)}
+#export-node[data-bg="none"] .export-panel{background:transparent}
+#book-view{background:var(--panel-strong);color:var(--text-main)}
+
+
+.compact-page-heading{margin:6px 0 18px;padding:0 4px}.compact-page-heading h1{margin:0;font:700 clamp(2.15rem,4vw,3rem)/1.05 var(--font-serif);letter-spacing:-.025em}
+.hero-shell{grid-template-columns:1fr;min-height:0;padding:30px 32px}.page-title{font-size:clamp(2.5rem,5vw,4rem)}
+.tool-card{min-height:190px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.tool-card h3{margin-top:8px}.tool-card p{max-width:32ch}

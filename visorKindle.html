@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOReader Studio · Clippings Kindle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@500;700&family=Special+Elite&family=Cinzel:wght@600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<link rel="stylesheet" href="./css/global.css">
+<link rel="stylesheet" href="./css/kindle.css">
+<link rel="stylesheet" href="./css/componentes.css">
+<link rel="stylesheet" href="./css/variables.css">
+<link rel="stylesheet" href="./css/profundidad.css">
+<link rel="stylesheet" href="./css/editorial.css">
+<script src="./js/theme.js"></script>
+<script src="./js/background-lights.js" defer></script>
+</head>
+<body>
+<div class="workspace">
+  <header class="header-bar">
+    <a class="brand" href="./index.html" aria-label="Volver al inicio"><span class="brand-badge">✦</span><span>KOReader Studio.</span></a>
+    <div class="header-actions">
+      <a href="./index.html" class="btn btn-secondary" id="btn-home">🏠 Inicio</a>
+      <button id="btn-theme" class="btn" type="button">🌙 Tema</button>
+    </div>
+  </header>
+<section class="magic-banner"><div class="magic-banner-grid"><div class="magic-banner-copy"><div class="eyebrow">Importador Kindle</div><h1>Clippings Kindle</h1><p>Tus subrayados, libro a libro.</p></div><div class="magic-banner-scene" aria-hidden="true"></div></div></section>
+
+
+  
+<div class="upload-zone" id="upload-zone">
+    <div class="upload-icon">📚</div>
+    <div class="upload-text">Arrastra o selecciona tu archivo My Clippings.txt</div>
+    <div class="upload-subtext">Importa y descarga cada libro.</div>
+    <input type="file" id="fileInput" accept=".txt">
+</div>
+
+<div class="nav-bar" id="nav-bar">
+    <div class="nav-left">
+        <div class="custom-select" id="book-select-wrap">
+            <button type="button" class="custom-select-trigger" id="book-select-trigger">
+                <span id="book-select-label">Selecciona un libro...</span>
+                <span class="custom-select-arrow">▾</span>
+            </button>
+            <div class="custom-select-panel" id="book-select-panel"></div>
+        </div>
+    </div>
+    <div class="nav-right">
+        <button id="btn-download-book" class="btn btn-primary">⬇️ Descargar para Visor de Notas</button>
+        <button id="btn-download-all" class="btn">📦 Descargar todos</button>
+        <button id="btn-change-file" class="btn">🔄 Cambiar archivo</button>
+    </div>
+</div>
+
+<div id="book-view">
+    <div class="book-header">
+        <div class="book-title" id="b-title"></div>
+        <div class="book-author" id="b-author"></div>
+        <div class="badge" id="b-badge"></div>
+    </div>
+    <div class="note-chapter">Recortes importados</div>
+    <div id="notesContainer"></div>
+</div>
+
+
+</div>
+<script>// --- TEMA (compartido con el resto del sitio) ---
+    const btnTheme = document.getElementById('btn-theme');
+   // --- ELEMENTOS ---
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('fileInput');
+    const navBar = document.getElementById('nav-bar');
+    const bookView = document.getElementById('book-view');
+    const notesContainer = document.getElementById('notesContainer');
+
+    const selectWrap = document.getElementById('book-select-wrap');
+    const selectTrigger = document.getElementById('book-select-trigger');
+    const selectLabel = document.getElementById('book-select-label');
+    const selectPanel = document.getElementById('book-select-panel');
+    const DEFAULT_SELECT_LABEL = 'Selecciona un libro...';
+
+    let books = [];        // array de { title, author, notes: [...] }
+    let currentBookIdx = -1;
+
+    function closeBookSelect() { selectWrap.classList.remove('open'); }
+    selectTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectWrap.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!selectWrap.contains(e.target)) closeBookSelect();
+    });
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    // --- ARRASTRAR Y SOLTAR EL ARCHIVO ---
+    ['dragenter', 'dragover'].forEach(evt => {
+        uploadZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.style.borderColor = 'var(--c-title)';
+        });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        uploadZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.style.borderColor = '';
+        });
+    });
+    uploadZone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+    // Por si se suelta fuera de la zona de subida: evitamos que el navegador abra el archivo
+    ['dragover', 'drop'].forEach(evt => {
+        document.addEventListener(evt, (e) => e.preventDefault());
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onerror = () => { alert('No se pudo leer My Clippings.txt.'); fileInput.value = ''; };
+        reader.onload = (ev) => {
+            books = parseClippings(ev.target.result);
+            if (!books.length) { alert('No se encontraron recortes compatibles en este archivo.'); fileInput.value = ''; return; }
+            renderBookOptions();
+            uploadZone.style.display = 'none';
+            navBar.style.display = 'flex';
+            if (books.length > 0) selectBook(0);
+        };
+        reader.readAsText(file, 'utf-8');
+    });
+
+    // ==========================================================================
+    // PARSEO DE "MY CLIPPINGS.TXT"
+    // ==========================================================================
+    const MONTH_MAP = {
+        enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,
+        julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12
+    };
+
+    function parseSpanishDate(str) {
+        const m = str.match(/(\d{1,2})\s+de\s+([a-zñáéíóú]+)\s+de\s+(\d{4})/i);
+        if (!m) return str.trim();
+        const day = m[1].padStart(2, '0');
+        const month = String(MONTH_MAP[m[2].toLowerCase()] || 1).padStart(2, '0');
+        return `${day}-${month}-${m[3]}`;
+    }
+
+    function parseClippings(raw) {
+        const text = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+        const blocks = text.split(/\n?={5,}\n?/).map(b => b.trim()).filter(Boolean);
+
+        const typeRe = /^-\s*(.+?)\s+(?:en la|on|at)\s+/i;
+        const pageRe = /(?:página|page)\s+([\d-]+)/i;
+        const positionRe = /(?:posición|location)\s+([\d-]+)/i;
+        const dateRe = /(?:Añadido el|Added on)\s+(.+)$/i;
+        const rawEntries = [];
+
+        blocks.forEach((block, idx) => {
+            const lines = block.split('\n').map(l => l.replace(/^\uFEFF/, ''));
+            if (lines.length < 2) return;
+
+            const headerLine = lines[0].trim();
+            const metaLine = lines[1].trim();
+
+            let contentStart = 2;
+            while (contentStart < lines.length && lines[contentStart].trim() === '') contentStart++;
+            const contentLines = lines.slice(contentStart).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            const content = contentLines.join(' ');
+
+            // El autor es el ÚLTIMO paréntesis de la primera línea; el título, el resto
+            const authorMatch = headerLine.match(/\(([^()]+)\)\s*$/);
+            const author = authorMatch ? authorMatch[1].trim() : 'Autor desconocido';
+            const title = (authorMatch ? headerLine.slice(0, authorMatch.index) : headerLine)
+                .replace(/\s*-\s*$/, '').trim() || 'Libro sin título';
+
+            const typeMatch = metaLine.match(typeRe);
+            const pageMatch = metaLine.match(pageRe);
+            const positionMatch = metaLine.match(positionRe);
+            const dateMatch = metaLine.match(dateRe);
+            if (!typeMatch || (!pageMatch && !positionMatch) || !dateMatch) return;
+            const typeLabel = typeMatch[1];
+            const pageStr = pageMatch ? pageMatch[1] : '';
+            const posStr = positionMatch ? positionMatch[1] : pageStr;
+            const dateRaw = dateMatch[1];
+            const typeLower = typeLabel.toLowerCase();
+            let type = 'highlight';
+            if (typeLower.includes('nota') || typeLower.includes('note')) type = 'note';
+            else if (typeLower.includes('marcador') || typeLower.includes('bookmark')) type = 'bookmark';
+            if (type === 'bookmark') return; // sin contenido útil que mostrar
+
+            const page = parseInt(pageStr, 10) || '';
+            const posParts = posStr.split('-').map(n => parseInt(n, 10));
+            const posStart = posParts[0];
+            const posEnd = posParts.length > 1 ? posParts[1] : posParts[0];
+
+            rawEntries.push({
+                idx, title, author, type, page, posStart, posEnd, location: posStr,
+                date: parseSpanishDate(dateRaw),
+                content: type === 'highlight' ? contentLines.join('\n') : content
+            });
+        });
+
+        // Agrupamos por libro, conservando el orden de aparición en el archivo
+        const byBook = new Map();
+        rawEntries.forEach(e => {
+            const key = `${e.title}||${e.author}`;
+            if (!byBook.has(key)) byBook.set(key, { title: e.title, author: e.author, entries: [] });
+            byBook.get(key).entries.push(e);
+        });
+
+        const result = [];
+        byBook.forEach(({ title, author, entries }) => {
+            const highlights = entries.filter(e => e.type === 'highlight');
+            const notes = entries.filter(e => e.type === 'note');
+
+            // Emparejamos cada nota con el subrayado de su misma página cuya posición la contiene.
+            // Si una nota se editó varias veces, solo nos quedamos con la última versión (gana la más reciente).
+            const attachedNotes = new Map();   // idx del subrayado -> nota
+            const standaloneNotes = new Map(); // "página-posición" -> nota (sin subrayado asociado)
+
+            notes.forEach(note => {
+                const match = highlights.find(h =>
+                    h.page === note.page && note.posStart >= h.posStart && note.posStart <= h.posEnd
+                );
+                if (match) {
+                    attachedNotes.set(match.idx, note);
+                } else {
+                    standaloneNotes.set(`${note.page}-${note.posStart}`, note);
+                }
+            });
+
+            const finalEntries = [];
+            highlights.forEach(h => {
+                const note = attachedNotes.get(h.idx);
+                finalEntries.push({
+                    order: h.idx, page: h.page, location: h.location, date: h.date,
+                    text: h.content, userNote: note ? note.content : ''
+                });
+            });
+            standaloneNotes.forEach(n => {
+                finalEntries.push({ order: n.idx, page: n.page, location: n.location, date: n.date, text: '', userNote: n.content });
+            });
+
+            // Mismo orden en el que aparece todo en el archivo original
+            finalEntries.sort((a, b) => a.order - b.order);
+
+            if (finalEntries.length > 0) result.push({ title, author, notes: finalEntries });
+        });
+
+        // Los libros, en el orden en que aparece su primera entrada en el archivo
+        result.sort((a, b) => a.notes[0].order - b.notes[0].order);
+        return result;
+    }
+
+    // ==========================================================================
+    // UI
+    // ==========================================================================
+    function renderBookOptions() {
+        selectPanel.innerHTML = '';
+        if (books.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'custom-select-empty';
+            empty.textContent = 'No se encontraron subrayados ni notas en este archivo';
+            selectPanel.appendChild(empty);
+            return;
+        }
+        books.forEach((book, i) => {
+            const opt = document.createElement('button');
+            opt.type = 'button';
+            opt.className = 'custom-select-option';
+            opt.innerHTML = `<span>${escapeHtml(book.title)}</span><span class="opt-count">${book.notes.length}</span>`;
+            opt.addEventListener('click', () => { selectBook(i); closeBookSelect(); });
+            selectPanel.appendChild(opt);
+        });
+    }
+
+    function selectBook(i) {
+        currentBookIdx = i;
+        const book = books[i];
+        if (!book) return;
+
+        selectLabel.textContent = book.title;
+        document.querySelectorAll('.custom-select-option').forEach((o, idx2) => {
+            o.classList.toggle('selected', idx2 === i);
+        });
+
+        document.getElementById('b-title').textContent = book.title;
+        document.getElementById('b-author').textContent = book.author;
+        document.getElementById('b-badge').textContent = `${book.notes.length} ${book.notes.length === 1 ? 'entrada' : 'entradas'}`;
+
+        notesContainer.innerHTML = '';
+        if (book.notes.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.textContent = 'Este libro no tiene subrayados ni notas.';
+            notesContainer.appendChild(empty);
+        } else {
+            book.notes.forEach(note => {
+                const block = document.createElement('div');
+                block.className = 'note-block';
+
+                const meta = document.createElement('div');
+                meta.className = 'note-meta';
+                meta.textContent = `${note.page ? 'Pág. ' + note.page : 'Pos. ' + note.location} — ${note.date}`;
+                block.appendChild(meta);
+
+                if (note.text) block.appendChild(buildQuoteEl(note.text));
+
+                if (note.userNote) {
+                    const card = document.createElement('div');
+                    card.className = 'user-note-card';
+                    const header = document.createElement('div');
+                    header.className = 'user-note-header';
+                    header.textContent = '✏️ Nota personal';
+                    const body = document.createElement('div');
+                    body.className = 'user-note-body';
+                    body.textContent = note.userNote;
+                    card.appendChild(header); card.appendChild(body);
+                    block.appendChild(card);
+                }
+
+                notesContainer.appendChild(block);
+            });
+        }
+
+        bookView.style.display = 'block';
+    }
+
+    // ==========================================================================
+    // DIÁLOGOS: cada intervención en su propia línea
+    // Una raya que abre una intervención nueva va después de un punto, o después de
+    // ? ! … » cuando lo siguiente NO empieza en minúscula (si empieza en minúscula es
+    // el inciso del narrador: «—¿Vienes? —preguntó él.»). Las rayas de los incisos
+    // («—Hola —dijo Juan— ¿qué tal?») y los guiones de palabras compuestas no se tocan.
+    // ==========================================================================
+    function splitDialogue(raw) {
+        const out = [];
+        String(raw).split('\n').forEach(part => {
+            const text = part.trim();
+            if (!text) return;
+            const re = /\s*([—–―-])(?=[^\s—–―-])/g;
+            let start = 0, m;
+            while ((m = re.exec(text)) !== null) {
+                const prev = text[m.index - 1];
+                const next = text[m.index + m[0].length];
+                const isEllipsisDots = prev === '.' && text[m.index - 2] === '.';
+                const hard = prev === '.' && !isEllipsisDots;
+                const soft = /[?!…»”"’]/.test(prev) || isEllipsisDots;
+                const startsLower = /\p{Ll}/u.test(next);
+                if (hard || (soft && !startsLower)) {
+                    const chunk = text.slice(start, m.index).trim();
+                    if (chunk) out.push(chunk);
+                    start = m.index + m[0].length - 1; // la raya pasa a la línea siguiente
+                }
+            }
+            const rest = text.slice(start).trim();
+            if (rest) out.push(rest);
+        });
+        return out;
+    }
+
+    function buildQuoteEl(text) {
+        const lines = splitDialogue(text);
+        const wrap = document.createElement('div');
+        wrap.className = 'note-text';
+        if (lines.length === 0) return wrap;
+
+        const isDash = l => /^[—–―-]/.test(l);
+        const hasDash = lines.some(isDash);
+
+        if (lines.length === 1 && !hasDash) {
+            wrap.textContent = `“${lines[0]}”`;
+            return wrap;
+        }
+
+        wrap.classList.add('is-dialogue');
+        lines.forEach((line, i) => {
+            const p = document.createElement('div');
+            p.className = 'dialogue-line' + (isDash(line) ? ' dash' : '');
+            // Con diálogo, la raya ya hace de comillas. Sin raya (varios párrafos), mantenemos las comillas.
+            p.textContent = hasDash ? line : `${i === 0 ? '“' : ''}${line}${i === lines.length - 1 ? '”' : ''}`;
+            wrap.appendChild(p);
+        });
+        return wrap;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ==========================================================================
+    // GENERACIÓN DEL ARCHIVO COMPATIBLE CON visorNotas.html
+    // ==========================================================================
+    function generateVisorNotasHTML(book) {
+        let html = `<html><body>\n<h2>${escapeHtml(book.title)}</h2>\n<h5>${escapeHtml(book.author)}</h5>\n`;
+        html += `<div style="font-size:14pt;">Recortes de Kindle</div>\n`;
+        book.notes.forEach(n => {
+            html += `<div style="padding-top:10px;">\n`;
+            html += `  <div style="font-size:10pt;"><span>${escapeHtml(n.date)}</span>: ${escapeHtml(n.page || 'Pos. ' + n.location)}</div>\n`;
+            if (n.text) html += `  <div style="font-size:12pt;">${escapeHtml(splitDialogue(n.text).join('\n'))}</div>\n`;
+            if (n.userNote) html += `  <div style="font-size:11pt;">${escapeHtml(n.userNote)}</div>\n`;
+            html += `</div>\n`;
+        });
+        html += `<\/body><\/html>`;
+        return html;
+    }
+
+    function safeFileName(name) {
+        return (name || 'Libro').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Libro';
+    }
+
+    document.getElementById('btn-download-book').addEventListener('click', () => {
+        if (currentBookIdx < 0) return;
+        const book = books[currentBookIdx];
+        const html = generateVisorNotasHTML(book);
+        const blob = new Blob([html], { type: 'text/html' });
+        saveAs(blob, `${safeFileName(book.title)}.html`);
+    });
+
+    document.getElementById('btn-download-all').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-download-all');
+        const origTxt = btn.textContent;
+        btn.disabled = true;
+        try {
+            const zip = new JSZip();
+            books.forEach((book, index) => {
+                zip.file(`${index + 1}_${safeFileName(book.title)}.html`, generateVisorNotasHTML(book));
+            });
+            btn.textContent = 'Comprimiendo...';
+            const blob = await zip.generateAsync({ type: 'blob' });
+            saveAs(blob, 'Clippings_Kindle.zip');
+            btn.textContent = '¡ZIP Descargado!';
+        } catch (err) {
+            console.error(err);
+            btn.textContent = 'Error';
+        }
+        setTimeout(() => { btn.textContent = origTxt; btn.disabled = false; }, 2500);
+    });
+
+    // --- CAMBIAR ARCHIVO SIN RECARGAR LA PÁGINA ---
+    document.getElementById('btn-change-file').addEventListener('click', () => {
+        books = [];
+        currentBookIdx = -1;
+        fileInput.value = '';
+        bookView.style.display = 'none';
+        navBar.style.display = 'none';
+        uploadZone.style.display = 'flex';
+        selectLabel.textContent = DEFAULT_SELECT_LABEL;
+        selectPanel.innerHTML = '';
+        notesContainer.innerHTML = '';
+        closeBookSelect();
+    });</script>
+<script>
+(function(){
+  const btnTheme = document.getElementById('btn-theme');
+  function syncThemeBtn(){ const dark = document.documentElement.getAttribute('data-theme') === 'dark'; btnTheme.textContent = dark ? '☀️ Tema claro' : '🌙 Tema oscuro'; }
+  syncThemeBtn();
+  btnTheme.addEventListener('click', syncThemeBtn);
+})();
+</script>
+</body>
+</html>

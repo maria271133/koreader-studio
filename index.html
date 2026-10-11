@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>KOReader Studio · Tu biblioteca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/inicio.css">
+  <link rel="stylesheet" href="./css/profundidad.css">
+  <link rel="stylesheet" href="./css/editorial.css">
+  <script src="./js/theme.js"></script>
+  <script src="./js/background-lights.js" defer></script>
+</head>
+<body>
+  <div class="workspace">
+    <header class="header-bar">
+      <a class="brand" href="./index.html" aria-label="KOReader Studio, inicio"><span class="brand-badge" aria-hidden="true">✦</span> KOReader Studio<span class="brand-dot">.</span></a>
+      <button class="theme-button" id="theme-toggle" type="button">🌙 Tema oscuro</button>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <span class="eyebrow">Tu biblioteca personal</span>
+          <h1 id="hero-title">Mi rincón<br><em>lector.</em></h1>
+          <p class="hero-subtitle">Un lugar para mis lecturas.</p>
+        </div>
+        <figure class="hero-art">
+          <img class="hero-day" src="./assets/paisaje-castillo-dia.png" width="1536" height="1024" alt="Un castillo sobre el mar entre nubes iluminadas por el sol." fetchpriority="high">
+          <img class="hero-night" src="./assets/paisaje-castillo-noche.png" width="1536" height="1024" alt="El mismo castillo y el mar bajo un cielo azul lleno de estrellas.">
+        </figure>
+      </section>
+      <section class="tools" id="herramientas" aria-labelledby="tools-title">
+        <div class="section-heading"><h2 id="tools-title">Abre tu biblioteca</h2></div>
+        <div class="tool-grid">
+          <a class="tool-card stats" href="./mis-estadisticas-lectura.html">
+            <div class="card-top"><span class="tool-number">01</span><span class="tool-format">SQLite</span></div>
+            <h3>Estadísticas</h3><p>Tu ritmo de lectura, día a día.</p>
+            <div class="card-bottom"><span>Abrir estadísticas</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+          </a>
+          <a class="tool-card notes" href="./visorNotas.html">
+            <div class="card-top"><span class="tool-number">02</span><span class="tool-format">HTML</span></div>
+            <h3>Visor de notas</h3><p>Citas que quieres conservar.</p>
+            <div class="card-bottom"><span>Abrir visor</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+          </a>
+          <a class="tool-card kindle" href="./visorKindle.html">
+            <div class="card-top"><span class="tool-number">03</span><span class="tool-format">TXT</span></div>
+            <h3>Clippings Kindle</h3><p>Tus subrayados, libro a libro.</p>
+            <div class="card-bottom"><span>Importar recortes</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
