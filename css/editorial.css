@@ -1,6 +1,6 @@
 /* Clear interface typography, with an editorial treatment for books. */
 :root{--font-sans:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--title-ink:#203e33;--section-ink:#535334;--subtitle-ink:#984a34;--detail-ink:#43594c;--title-shadow:0 2px 3px rgba(32,62,51,.16)}
-[data-theme="dark"]{--title-ink:#fff0cc;--section-ink:#d3c9a1;--subtitle-ink:#ffb69b;--detail-ink:#d1dbc9;--title-shadow:0 2px 4px rgba(0,0,0,.4)}
+[data-theme="dark"]{--title-ink:#faf8f4;--section-ink:#ded3bc;--subtitle-ink:#d8a5a0;--detail-ink:#c7c5cb;--title-shadow:0 2px 3px rgba(0,0,0,.35)}
 .hero h1,.page-title,.magic-banner h1,.compact-page-heading h1,.habits-heading h2,.habit-panel h2,.habit-brief>summary,#export-node .heatmap-title,#export-node .cal-month-title,#export-node .book-title,#book-view .book-title,.habit-book-card h3,.tool-card h3,.habit-year-title{text-shadow:var(--title-shadow)}
 body{-webkit-font-smoothing:antialiased}
 .brand{font-family:var(--font-serif);font-weight:600;font-size:1.9rem;letter-spacing:-.025em;color:var(--title-ink)}

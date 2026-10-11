@@ -1,6 +1,7 @@
 /* Outer workspace, lifted sections, then lighter inner cards. */
 #export-node .habit-library{margin-top:26px;padding:24px;background:var(--panel-color,var(--section-surface));border:1px solid var(--line-strong);border-radius:24px;box-shadow:var(--shadow-md)}
-#export-node .habit-panel,#export-node .habit-brief{background:var(--panel-color,var(--section-surface));border-color:var(--line-strong);box-shadow:var(--shadow-md)}
+#export-node .habit-panel{background:var(--panel-color,var(--section-surface));border-color:var(--line);box-shadow:var(--shadow-md)}
+#export-node .habit-brief{background:var(--panel-color,var(--brief-surface));border-color:var(--line);box-shadow:var(--shadow-inset);border-radius:16px}
 #export-node .habit-book-card,#export-node .stat-card{background:var(--panel-color,var(--inner-surface));border-color:var(--line-strong);box-shadow:var(--shadow-sm)}
 #export-node .habit-brief .audit-list,#export-node .habit-brief .heatmap-box{background:var(--panel-color,var(--inner-surface))!important;border-color:var(--line-strong);box-shadow:var(--shadow-sm);margin-top:18px}
 #export-node .cal-month-box{background:var(--panel-color,var(--section-surface))!important;border-color:var(--line-strong);box-shadow:var(--shadow-md)}
@@ -8,6 +9,15 @@
 #export-node .note-block .user-note-card{background:var(--panel-color,var(--inner-surface));border-color:var(--line-strong);box-shadow:var(--shadow-sm)}
 .studio-select-menu,.custom-select-panel{background:var(--panel-color,var(--section-surface));box-shadow:var(--shadow-md)}
 .hero,.magic-banner{box-shadow:var(--shadow-lg)}
+/* A quiet outer frame, section shelves, raised cards and recessed details. */
+#export-node .habit-library{border-color:var(--line);border-radius:20px}
+#export-node .habit-book-card{border-radius:16px;transition:transform .2s,border-color .2s,box-shadow .2s}
+#export-node .habit-book-card:hover{box-shadow:var(--shadow-md);border-color:var(--accent)}
+#export-node .habit-brief .audit-list{box-shadow:var(--shadow-inset)}
+[data-theme="dark"] body{background:radial-gradient(ellipse at 50% 0,rgba(255,255,255,.035),transparent 55%),linear-gradient(145deg,var(--page-1),var(--page-2) 65%,var(--page-3));background-attachment:fixed}
+[data-theme="dark"] #export-node:not([data-bg="none"]) .export-panel{background:rgba(14,14,17,.78)}
+[data-theme="dark"] .habits-tag{background:rgba(255,255,255,.045)}
+[data-theme="dark"] .hero-art:after{background:linear-gradient(transparent,rgba(5,5,6,.65))}
 body::after{
  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
  background:var(--scatter-lights,none);
