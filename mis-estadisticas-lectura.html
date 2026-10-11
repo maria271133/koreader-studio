@@ -61,7 +61,18 @@
                     <button class="bg-swatch bg-swatch-custom" id="custom-bg-trigger" type="button" title="Subir tu propia imagen">🖼️</button>
                     <button class="bg-swatch bg-swatch-custom" id="custom-bg-url-trigger" type="button" title="Usar una imagen desde un enlace">🔗</button>
                     <input type="color" id="custom-bg-color" value="#7D73FF" title="Color del tinte" style="display:none;">
-                    <input type="range" id="custom-bg-opacity" min="0" max="80" value="38" title="Intensidad del tinte" style="display:none;">
+                    <label class="image-mix-control" id="image-tint-control" hidden>
+                        <span>Color sobre la imagen</span>
+                        <input type="range" id="custom-bg-opacity" min="0" max="100" value="38" title="Cantidad de color sobre la imagen" aria-describedby="image-tint-hint">
+                        <output id="image-tint-value" for="custom-bg-opacity">38%</output>
+                        <span class="image-mix-hint" id="image-tint-hint">0%: imagen original · 100%: solo color</span>
+                    </label>
+                    <label class="image-mix-control" id="image-panel-control" hidden>
+                        <span>Opacidad del panel</span>
+                        <input type="range" id="image-panel-opacity" min="0" max="100" value="82" aria-describedby="image-panel-hint">
+                        <output id="image-panel-value" for="image-panel-opacity">82%</output>
+                        <span class="image-mix-hint" id="image-panel-hint">Menos: se ve más la imagen · Más: se ve más el panel</span>
+                    </label>
                     <input type="range" id="custom-bg-pos-x" min="0" max="100" value="50" title="Mover imagen horizontalmente" style="display:none;">
                     <input type="range" id="custom-bg-pos-y" min="0" max="100" value="50" title="Mover imagen verticalmente" style="display:none;">
                     <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp" style="display:none;">
@@ -143,6 +154,7 @@
 
 </div>
 <script src="./js/export-utils.js"></script>
+<script src="./js/image-controls.js" defer></script>
 <script src="./js/reading-habits.js"></script>
 <script>// --- TEMA ---
     const btnTheme = document.getElementById('btn-theme');

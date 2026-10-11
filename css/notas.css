@@ -32,7 +32,7 @@
 #notesContainer .note-block.zip-capture-card{width:640px;max-width:none;padding:38px;border-radius:24px;box-shadow:none}
 #export-node:not([data-bg="none"]) .note-block,.note-block.zip-capture-card.with-bg-image{
  background-color:var(--panel-solid);
- background-image:linear-gradient(rgba(var(--panel-rgb,var(--bg-card-rgb)),.82),rgba(var(--panel-rgb,var(--bg-card-rgb)),.82)),linear-gradient(var(--custom-tint),var(--custom-tint)),var(--custom-img);
+ background-image:linear-gradient(rgba(var(--panel-rgb,var(--bg-card-rgb)),var(--image-panel-opacity,.82)),rgba(var(--panel-rgb,var(--bg-card-rgb)),var(--image-panel-opacity,.82))),linear-gradient(var(--custom-tint),var(--custom-tint)),var(--custom-img);
  background-size:cover;background-repeat:no-repeat;background-position:var(--custom-pos);
 }
 #export-node:not([data-bg="none"]) .export-panel{background:transparent!important}

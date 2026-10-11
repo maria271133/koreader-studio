@@ -31,3 +31,10 @@ body::after{
 }
 body::before{background:linear-gradient(135deg,rgba(255,255,255,.06),transparent 45%)}
 @media(max-width:540px){#export-node .habit-library{padding:16px}}
+.image-mix-control{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-basis:100%;font-size:.8rem;color:var(--text-soft)}
+.image-mix-control[hidden]{display:none}
+.image-mix-control input[type="range"]{width:150px;max-width:100%;accent-color:var(--accent)}
+.image-mix-control output{min-width:3ch;font-variant-numeric:tabular-nums;color:var(--text-main)}
+.image-mix-hint{font-size:.72rem;color:var(--text-faint)}
+#export-node[data-bg="custom"] .export-panel{background:rgba(var(--panel-rgb,var(--bg-card-rgb)),var(--image-panel-opacity,.82))}
+#export-node[data-bg="custom"] :is(.habit-library,.habit-panel,.habit-brief,.stat-card,.habit-book-card,.habit-day-value,.book-header,.audit-list,.heatmap-box,.annual-scroll,.cal-month-box,.user-note-card){background:rgba(var(--panel-rgb,var(--bg-card-rgb)),var(--image-panel-opacity,.82))!important}
