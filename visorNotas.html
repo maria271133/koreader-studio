@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="./css/variables.css">
 <link rel="stylesheet" href="./css/profundidad.css">
 <link rel="stylesheet" href="./css/editorial.css">
+<link rel="stylesheet" href="./css/capture-controls.css">
 <script src="./js/theme.js"></script>
 <script src="./js/background-lights.js" defer></script>
 </head>
@@ -40,59 +41,85 @@
     <input type="file" id="fileInput" accept=".html,.htm,.txt">
 </label>
 
-<div class="nav-bar" id="nav-bar">
-    <div class="nav-left">
-        <details class="toolbar-group" id="style-tools">
-            <summary class="toolbar-summary">🎨 Personalizar captura</summary>
-            <div class="toolbar-panel">
-                <div class="bg-picker" id="bg-picker">
-                    <span class="bg-picker-label">Fondo</span>
-                    <button class="bg-swatch active" data-swatch="none" title="Sin fondo"></button>
-                    <button class="bg-swatch bg-swatch-custom" id="custom-bg-trigger" type="button" title="Subir tu propia imagen">🖼️</button>
-                    <button class="bg-swatch bg-swatch-custom" id="custom-bg-url-trigger" type="button" title="Usar una imagen desde un enlace">🔗</button>
-                    <input type="color" id="custom-bg-color" value="#7D73FF" title="Color del tinte" style="display:none;">
-                    <label class="image-mix-control" id="image-tint-control" hidden>
-                        <span>Color sobre la imagen</span>
-                        <input type="range" id="custom-bg-opacity" min="0" max="100" value="38" title="Cantidad de color sobre la imagen" aria-describedby="image-tint-hint">
-                        <output id="image-tint-value" for="custom-bg-opacity">38%</output>
-                        <span class="image-mix-hint" id="image-tint-hint">0%: imagen original · 100%: solo color</span>
-                    </label>
-                    <label class="image-mix-control" id="image-panel-control" hidden>
-                        <span>Opacidad del panel</span>
-                        <input type="range" id="image-panel-opacity" min="0" max="100" value="82" aria-describedby="image-panel-hint">
-                        <output id="image-panel-value" for="image-panel-opacity">82%</output>
-                        <span class="image-mix-hint" id="image-panel-hint">Menos: se ve más la imagen · Más: se ve más el panel</span>
-                    </label>
-                    <input type="range" id="custom-bg-pos-x" min="0" max="100" value="50" title="Mover imagen horizontalmente" style="display:none;">
-                    <input type="range" id="custom-bg-pos-y" min="0" max="100" value="50" title="Mover imagen verticalmente" style="display:none;">
-                    <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp" style="display:none;">
-                    <span class="bg-picker-label">Panel</span>
-                    <input type="color" id="panel-color" value="#FFFFFF" title="Color del panel donde va el texto">
-                    <button type="button" class="panel-reset-btn" id="panel-color-reset" title="Volver al color original del panel">↺</button>
-                    <div class="bg-url-row" id="bg-url-row">
-                        <input type="text" id="bg-url-input" placeholder="Pega aquí el enlace de la imagen (https://...)" autocomplete="off" spellcheck="false">
-                        <button type="button" class="btn btn-primary" id="bg-url-apply">Usar</button>
-                    </div>
-                    <div class="bg-url-msg" id="bg-url-msg"></div>
-                </div>
-            </div>
-        </details>
-    </div>
-    <div class="nav-right">
-        <select id="font-vibe" class="mini-select" title="Tipografía de la nota personal">
+<div class="nav-bar studio-toolbar" id="nav-bar" aria-label="Herramientas de lectura y captura">
+    <div class="nav-left note-format-tools"><div class="format-control"><span class="control-label">Letra de la nota personal</span>        <select id="font-vibe" class="mini-select" title="Tipografía de la nota personal">
             <option value="hand" selected>✍️ Manuscrito · Handlee</option>
             <option value="life">🌼 Life Savers</option>
             <option value="fuzzy">🫧 Fuzzy Bubbles</option>
             <option value="minimal">▫️ Minimalista</option>
-        </select>
-        <select id="aspect-ratio" class="mini-select" title="Proporción fija para galería">
+        </select></div>
+<div class="format-control"><span class="control-label">Formato de las tarjetas</span>        <select id="aspect-ratio" class="mini-select" title="Proporción fija para galería">
             <option value="" selected>Horizontal (4:3)</option>
             <option value="ratio-1-1">◻️ Cuadrado (1:1)</option>
             <option value="ratio-9-16">📱 Vertical (9:16)</option>
-        </select>
+        </select></div></div>
+    <div class="nav-right">
+        <details class="toolbar-group" id="style-tools">
+            <summary class="toolbar-summary">🎨 Personalizar captura</summary>
+            <div class="toolbar-panel">
+                <div class="bg-picker capture-settings" id="bg-picker">
+                    <section class="settings-section">
+                        <h3>Imagen de fondo</h3>
+                        <p class="settings-help">Elige una imagen para tu captura.</p>
+                        <div class="image-source-actions">
+                            <button class="bg-swatch source-button active" data-swatch="none" type="button" title="Sin fondo">Sin imagen</button>
+                            <button class="bg-swatch bg-swatch-custom source-button" id="custom-bg-trigger" type="button" title="Subir tu propia imagen">Subir imagen</button>
+                            <button class="bg-swatch bg-swatch-custom source-button" id="custom-bg-url-trigger" type="button" title="Usar una imagen desde un enlace">Usar enlace</button>
+                        </div>
+                        <input type="file" id="custom-bg-file" accept="image/*,.png,.jpg,.jpeg,.jfif,.webp,.avif,.gif,.svg,.bmp" style="display:none;">
+                        <div class="bg-url-row" id="bg-url-row">
+                            <label for="bg-url-input">Enlace de la imagen</label>
+                            <input type="text" id="bg-url-input" placeholder="https://…" autocomplete="off" spellcheck="false">
+                            <button type="button" class="btn btn-primary" id="bg-url-apply">Aplicar imagen</button>
+                        </div>
+                        <div class="bg-url-msg" id="bg-url-msg" role="status"></div>
+                    </section>
+                    <section class="settings-section">
+                        <h3>Color y transparencia</h3>
+                        <p class="settings-help">Combina el panel con el fondo.</p>
+                        <div class="color-control-row">
+                            <label for="panel-color">Color del panel</label>
+                            <input type="color" id="panel-color" value="#FFFFFF" title="Color del panel donde va el texto">
+                            <button type="button" class="panel-reset-btn" id="panel-color-reset" title="Volver al color original del panel">Restablecer</button>
+                        </div>
+                        <label class="image-mix-control" id="image-panel-control" hidden>
+                            <span>Opacidad del panel</span><output id="image-panel-value" for="image-panel-opacity">82%</output>
+                            <input type="range" id="image-panel-opacity" min="0" max="100" value="82" aria-describedby="image-panel-hint">
+                            <span class="image-mix-hint" id="image-panel-hint">Más imagen ← → Más panel</span>
+                        </label>
+                        <div class="color-control-row image-controls-only" hidden>
+                            <label for="custom-bg-color">Color sobre la imagen</label>
+                            <input type="color" id="custom-bg-color" value="#7D73FF" title="Color del tinte" style="display:none;">
+                        </div>
+                        <label class="image-mix-control" id="image-tint-control" hidden>
+                            <span>Intensidad del color</span><output id="image-tint-value" for="custom-bg-opacity">38%</output>
+                            <input type="range" id="custom-bg-opacity" min="0" max="100" value="38" title="Cantidad de color sobre la imagen" aria-describedby="image-tint-hint">
+                            <span class="image-mix-hint" id="image-tint-hint">Imagen original ← → Solo color</span>
+                        </label>
+                    </section>
+                    <section class="settings-section image-controls-only" hidden>
+                        <h3>Posición de la imagen</h3>
+                        <p class="settings-help">Ajusta qué parte queda dentro de la captura.</p>
+                        <label class="image-mix-control">
+                            <span>Horizontal</span><output id="image-pos-x-value" for="custom-bg-pos-x">50%</output>
+                            <input type="range" id="custom-bg-pos-x" min="0" max="100" value="50" title="Mover imagen horizontalmente" style="display:none;">
+                            <span class="image-mix-hint">Izquierda ← → Derecha</span>
+                        </label>
+                        <label class="image-mix-control">
+                            <span>Vertical</span><output id="image-pos-y-value" for="custom-bg-pos-y">50%</output>
+                            <input type="range" id="custom-bg-pos-y" min="0" max="100" value="50" title="Mover imagen verticalmente" style="display:none;">
+                            <span class="image-mix-hint">Arriba ← → Abajo</span>
+                        </label>
+                    </section>
+                </div>
+            </div>
+        </details>
+
+
+
         <button id="btn-export" class="btn btn-primary">📸 Capturar imagen</button>
         <button id="btn-export-zip" class="btn">📦 Descargar ZIP</button>
-        <button id="btn-change-file" class="btn">🔄 Cambiar archivo</button>
+        <button id="btn-change-file" class="btn">Cambiar archivo</button>
     </div>
 </div>
 
